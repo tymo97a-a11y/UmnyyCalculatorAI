@@ -15,6 +15,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,6 +24,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var input: EditText
     private lateinit var result: TextView
     private lateinit var history: TextView
+    private lateinit var calculatorDisplay: TextView
+
+    private var currentNumber = "0"
+    private var firstNumber: Double? = null
+    private var currentOperator: String? = null
+    private var shouldStartNewNumber = true
 
     private val preferencesName = "calculator_history"
     private val historyKey = "history"
@@ -32,12 +39,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         input = findViewById(R.id.input)
-        val calculateButton = findViewById<Button>(R.id.calculateButton)
-        val clearButton = findViewById<Button>(R.id.clearButton)
         result = findViewById(R.id.result)
         history = findViewById(R.id.history)
+        calculatorDisplay = findViewById(R.id.calculatorDisplay)
+
+        val calculateButton =
+            findViewById<Button>(R.id.calculateButton)
+
+        val clearButton =
+            findViewById<Button>(R.id.clearButton)
 
         loadHistory()
+
+        setupCalculatorButtons()
 
         calculateButton.setOnClickListener {
 
@@ -62,6 +76,228 @@ class MainActivity : AppCompatActivity() {
             clearHistory()
         }
     }
+
+    // =========================
+    // ОБЫЧНЫЙ КАЛЬКУЛЯТОР
+    // =========================
+
+    private fun setupCalculatorButtons() {
+
+        val numbers = mapOf(
+            R.id.button0 to "0",
+            R.id.button1 to "1",
+            R.id.button2 to "2",
+            R.id.button3 to "3",
+            R.id.button4 to "4",
+            R.id.button5 to "5",
+            R.id.button6 to "6",
+            R.id.button7 to "7",
+            R.id.button8 to "8",
+            R.id.button9 to "9"
+        )
+
+        for ((id, number) in numbers) {
+
+            findViewById<Button>(id).setOnClickListener {
+                addNumber(number)
+            }
+        }
+
+        findViewById<Button>(R.id.buttonDot)
+            .setOnClickListener {
+                addDot()
+            }
+
+        findViewById<Button>(R.id.buttonPlus)
+            .setOnClickListener {
+                chooseOperator("+")
+            }
+
+        findViewById<Button>(R.id.buttonMinus)
+            .setOnClickListener {
+                chooseOperator("-")
+            }
+
+        findViewById<Button>(R.id.buttonMultiply)
+            .setOnClickListener {
+                chooseOperator("×")
+            }
+
+        findViewById<Button>(R.id.buttonDivide)
+            .setOnClickListener {
+                chooseOperator("÷")
+            }
+
+        findViewById<Button>(R.id.buttonEquals)
+            .setOnClickListener {
+                calculateResult()
+            }
+
+        findViewById<Button>(R.id.buttonClearCalc)
+            .setOnClickListener {
+                clearCalculator()
+            }
+
+        findViewById<Button>(R.id.buttonBackspace)
+            .setOnClickListener {
+                deleteLastNumber()
+            }
+
+        findViewById<Button>(R.id.buttonPercent)
+            .setOnClickListener {
+                calculatePercent()
+            }
+    }
+
+    private fun addNumber(number: String) {
+
+        if (shouldStartNewNumber || currentNumber == "0") {
+            currentNumber = number
+            shouldStartNewNumber = false
+        } else {
+            currentNumber += number
+        }
+
+        updateDisplay()
+    }
+
+    private fun addDot() {
+
+        if (shouldStartNewNumber) {
+            currentNumber = "0."
+            shouldStartNewNumber = false
+        } else if (!currentNumber.contains(".")) {
+            currentNumber += "."
+        }
+
+        updateDisplay()
+    }
+
+    private fun chooseOperator(operator: String) {
+
+        val number = currentNumber.toDoubleOrNull() ?: 0.0
+
+        if (firstNumber != null && currentOperator != null && !shouldStartNewNumber) {
+            calculateResult()
+        }
+
+        firstNumber = number
+        currentOperator = operator
+        shouldStartNewNumber = true
+    }
+
+    private fun calculateResult() {
+
+        val first = firstNumber ?: return
+        val second = currentNumber.toDoubleOrNull() ?: return
+        val operator = currentOperator ?: return
+
+        val answer: Double
+
+        when (operator) {
+
+            "+" -> {
+                answer = first + second
+            }
+
+            "-" -> {
+                answer = first - second
+            }
+
+            "×" -> {
+                answer = first * second
+            }
+
+            "÷" -> {
+
+                if (second == 0.0) {
+                    calculatorDisplay.text = "Ошибка"
+                    return
+                }
+
+                answer = first / second
+            }
+
+            else -> return
+        }
+
+        currentNumber = formatNumber(answer)
+
+        calculatorDisplay.text = currentNumber
+
+        firstNumber = null
+        currentOperator = null
+        shouldStartNewNumber = true
+    }
+
+    private fun calculatePercent() {
+
+        val number = currentNumber.toDoubleOrNull() ?: return
+
+        val percent = if (firstNumber != null) {
+            firstNumber!! * number / 100.0
+        } else {
+            number / 100.0
+        }
+
+        currentNumber = formatNumber(percent)
+
+        shouldStartNewNumber = true
+
+        updateDisplay()
+    }
+
+    private fun clearCalculator() {
+
+        currentNumber = "0"
+        firstNumber = null
+        currentOperator = null
+        shouldStartNewNumber = true
+
+        calculatorDisplay.text = "0"
+    }
+
+    private fun deleteLastNumber() {
+
+        if (shouldStartNewNumber) {
+            return
+        }
+
+        currentNumber =
+            if (currentNumber.length <= 1) {
+                "0"
+            } else {
+                currentNumber.dropLast(1)
+            }
+
+        if (currentNumber == "-" || currentNumber.isEmpty()) {
+            currentNumber = "0"
+        }
+
+        updateDisplay()
+    }
+
+    private fun updateDisplay() {
+        calculatorDisplay.text = currentNumber
+    }
+
+    private fun formatNumber(number: Double): String {
+
+        if (number == number.toLong().toDouble()) {
+            return number.toLong().toString()
+        }
+
+        return String.format(
+            Locale.US,
+            "%.8f",
+            number
+        ).trimEnd('0')
+            .trimEnd('.')
+    }
+
+    // =========================
+    // AI
+    // =========================
 
     private fun sendToAI(text: String) {
 
@@ -158,6 +394,10 @@ class MainActivity : AppCompatActivity() {
             }
         )
     }
+
+    // =========================
+    // ИСТОРИЯ
+    // =========================
 
     private fun addToHistory(
         question: String,
