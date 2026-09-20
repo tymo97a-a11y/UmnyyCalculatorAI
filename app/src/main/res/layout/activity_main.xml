@@ -55,7 +55,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Опиши задачу обычными словами"
+                android:text="Опиши задачу обычными словами или используй фото"
                 android:textColor="#8D99AE"
                 android:textSize="14sp"
                 android:paddingTop="4dp"
@@ -86,6 +86,30 @@
                 android:textAllCaps="false"
                 android:background="@drawable/button_operator"
                 android:layout_marginTop="12dp" />
+
+            <!-- КНОПКА ФОТО -->
+
+            <Button
+                android:id="@+id/photoButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="📷  Рассчитать по фото"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textAllCaps="false"
+                android:background="@drawable/button_number"
+                android:layout_marginTop="10dp" />
+
+            <TextView
+                android:id="@+id/photoStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#8D99AE"
+                android:textSize="14sp"
+                android:paddingTop="8dp"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/result"
