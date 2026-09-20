@@ -35,7 +35,7 @@
             android:layout_marginTop="5dp"
             android:layout_marginBottom="18dp" />
 
-        <!-- AI ПОМОЩНИК -->
+        <!-- AI -->
 
         <TextView
             android:layout_width="match_parent"
@@ -79,7 +79,7 @@
             android:layout_marginTop="25dp"
             android:layout_marginBottom="9dp" />
 
-        <!-- ЭКРАН КАЛЬКУЛЯТОРА -->
+        <!-- ЭКРАН -->
 
         <TextView
             android:id="@+id/calculatorDisplay"
@@ -103,148 +103,205 @@
             android:useDefaultMargins="true"
             android:layout_marginTop="10dp">
 
-            <!-- ПЕРВАЯ СТРОКА -->
+            <!-- AC -->
 
             <Button
                 android:id="@+id/buttonClearCalc"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="AC"
+                android:textColor="#FFFFFF"
                 android:textSize="17sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textAllCaps="false" />
+
+            <!-- BACKSPACE -->
 
             <Button
                 android:id="@+id/buttonBackspace"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="⌫"
+                android:textColor="#FFFFFF"
                 android:textSize="20sp" />
+
+            <!-- PERCENT -->
 
             <Button
                 android:id="@+id/buttonPercent"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="%"
+                android:textColor="#FFFFFF"
                 android:textSize="20sp" />
+
+            <!-- DIVIDE -->
 
             <Button
                 android:id="@+id/buttonDivide"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_operator"
                 android:text="÷"
+                android:textColor="#FFFFFF"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
-            <!-- ВТОРАЯ СТРОКА -->
+            <!-- 7 -->
 
             <Button
                 android:id="@+id/button7"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="7"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- 8 -->
 
             <Button
                 android:id="@+id/button8"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="8"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- 9 -->
 
             <Button
                 android:id="@+id/button9"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="9"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- MULTIPLY -->
 
             <Button
                 android:id="@+id/buttonMultiply"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_operator"
                 android:text="×"
+                android:textColor="#FFFFFF"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
-            <!-- ТРЕТЬЯ СТРОКА -->
+            <!-- 4 -->
 
             <Button
                 android:id="@+id/button4"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="4"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- 5 -->
 
             <Button
                 android:id="@+id/button5"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="5"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- 6 -->
 
             <Button
                 android:id="@+id/button6"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="6"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- MINUS -->
 
             <Button
                 android:id="@+id/buttonMinus"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_operator"
                 android:text="−"
+                android:textColor="#FFFFFF"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
-            <!-- ЧЕТВЁРТАЯ СТРОКА -->
+            <!-- 1 -->
 
             <Button
                 android:id="@+id/button1"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="1"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- 2 -->
 
             <Button
                 android:id="@+id/button2"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="2"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- 3 -->
 
             <Button
                 android:id="@+id/button3"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="3"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- PLUS -->
 
             <Button
                 android:id="@+id/buttonPlus"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_operator"
                 android:text="+"
+                android:textColor="#FFFFFF"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
-            <!-- ПЯТАЯ СТРОКА -->
+            <!-- 0 -->
 
             <Button
                 android:id="@+id/button0"
@@ -252,23 +309,33 @@
                 android:layout_height="64dp"
                 android:layout_columnSpan="2"
                 android:layout_columnWeight="2"
+                android:background="@drawable/button_number"
                 android:text="0"
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- DOT -->
 
             <Button
                 android:id="@+id/buttonDot"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_number"
                 android:text="."
+                android:textColor="#FFFFFF"
                 android:textSize="21sp" />
+
+            <!-- EQUALS -->
 
             <Button
                 android:id="@+id/buttonEquals"
                 android:layout_width="0dp"
                 android:layout_height="64dp"
                 android:layout_columnWeight="1"
+                android:background="@drawable/button_operator"
                 android:text="="
+                android:textColor="#FFFFFF"
                 android:textSize="22sp"
                 android:textStyle="bold" />
 
