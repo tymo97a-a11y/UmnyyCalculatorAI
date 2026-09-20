@@ -180,11 +180,10 @@ class MainActivity : AppCompatActivity() {
         )
 
         val body =
-            json.toString()
-                .toRequestBody(
-                    "application/json; charset=utf-8"
-                        .toMediaType()
-                )
+            RequestBody.create(
+                "application/json; charset=utf-8".toMediaType(),
+                json.toString()
+            )
 
         val request =
             Request.Builder()
@@ -386,9 +385,6 @@ class MainActivity : AppCompatActivity() {
         Thread {
 
             try {
-
-                val contentResolver =
-                    contentResolver
 
                 val inputStream =
                     contentResolver.openInputStream(
