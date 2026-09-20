@@ -4,6 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F5F7FB"
     android:fillViewport="true">
 
     <LinearLayout
@@ -15,79 +16,94 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🤖 Умный калькулятор AI"
-            android:textSize="26sp"
+            android:text="Умный калькулятор AI"
+            android:textSize="28sp"
             android:textStyle="bold"
+            android:textColor="#172033"
             android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginTop="12dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Решите пример или задайте вопрос"
-            android:textSize="16sp"
+            android:text="Решайте примеры и задавайте вопросы"
+            android:textSize="15sp"
+            android:textColor="#667085"
             android:gravity="center"
-            android:layout_marginBottom="20dp" />
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="24dp" />
 
         <EditText
             android:id="@+id/input"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Например: 125 × 8 или 15% от 240"
-            android:inputType="text"
-            android:minHeight="60dp"
-            android:padding="14dp" />
+            android:layout_height="60dp"
+            android:background="#FFFFFF"
+            android:hint="Например: 15% от 240"
+            android:textSize="17sp"
+            android:textColor="#172033"
+            android:textColorHint="#98A2B3"
+            android:padding="16dp"
+            android:inputType="text" />
 
         <Button
             android:id="@+id/calculateButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🤖 Рассчитать"
-            android:textSize="18sp"
+            android:layout_height="58dp"
+            android:text="Рассчитать с AI"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
             android:layout_marginTop="14dp" />
 
         <Button
             android:id="@+id/clearButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="🗑 Очистить"
+            android:layout_height="52dp"
+            android:text="Очистить"
+            android:textSize="16sp"
             android:layout_marginTop="8dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Ответ AI"
-            android:textSize="20sp"
+            android:textSize="21sp"
             android:textStyle="bold"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp" />
+            android:textColor="#172033"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="10dp" />
 
         <TextView
             android:id="@+id/result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#FFFFFF"
             android:text="Ответ появится здесь"
-            android:textSize="18sp"
-            android:padding="16dp"
-            android:minHeight="100dp" />
+            android:textSize="17sp"
+            android:textColor="#172033"
+            android:padding="18dp"
+            android:minHeight="110dp" />
 
         <TextView
             android:id="@+id/historyTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="История"
-            android:textSize="20sp"
+            android:text="История расчётов"
+            android:textSize="21sp"
             android:textStyle="bold"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp" />
+            android:textColor="#172033"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="10dp" />
 
         <TextView
             android:id="@+id/history"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#FFFFFF"
             android:text="История расчётов пока пуста"
             android:textSize="16sp"
-            android:padding="12dp" />
+            android:textColor="#344054"
+            android:padding="16dp" />
 
     </LinearLayout>
 
