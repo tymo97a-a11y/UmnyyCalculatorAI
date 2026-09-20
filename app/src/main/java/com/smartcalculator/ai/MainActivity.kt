@@ -16,7 +16,6 @@ import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
 import java.util.Locale
-import java.util.Stack
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,10 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var history: TextView
     private lateinit var calculatorDisplay: TextView
 
-    // Полное выражение калькулятора
     private var expression = ""
-
-    // После получения результата начинаем новое число
     private var shouldStartNewNumber = true
 
     private val preferencesName = "calculator_history"
@@ -46,35 +42,25 @@ class MainActivity : AppCompatActivity() {
         history = findViewById(R.id.history)
         calculatorDisplay = findViewById(R.id.calculatorDisplay)
 
+        loadHistory()
+        setupCalculatorButtons()
+
         val calculateButton =
             findViewById<Button>(R.id.calculateButton)
 
         val clearButton =
             findViewById<Button>(R.id.clearButton)
 
-        loadHistory()
-
-        setupCalculatorButtons()
-
-        // ==========================
-        // AI
-        // ==========================
-
         calculateButton.setOnClickListener {
 
-            val text =
-                input.text.toString().trim()
+            val text = input.text.toString().trim()
 
             if (text.isEmpty()) {
-
-                result.text =
-                    "Введите пример или вопрос"
-
+                result.text = "Введите пример или вопрос"
                 return@setOnClickListener
             }
 
-            result.text =
-                "🤖 AI считает..."
+            result.text = "🤖 AI считает..."
 
             sendToAI(text)
         }
@@ -83,8 +69,7 @@ class MainActivity : AppCompatActivity() {
 
             input.text.clear()
 
-            result.text =
-                "Ответ появится здесь"
+            result.text = "Ответ появится здесь"
 
             clearHistory()
         }
@@ -97,7 +82,6 @@ class MainActivity : AppCompatActivity() {
     private fun setupCalculatorButtons() {
 
         val numbers = mapOf(
-
             R.id.button0 to "0",
             R.id.button1 to "1",
             R.id.button2 to "2",
@@ -112,65 +96,64 @@ class MainActivity : AppCompatActivity() {
 
         for ((id, number) in numbers) {
 
-            findViewById<Button>(id)
-                .setOnClickListener {
-
-                    addNumber(number)
-                }
+            findViewById<Button>(id).setOnClickListener {
+                addNumber(number)
+            }
         }
 
         findViewById<Button>(R.id.buttonDot)
             .setOnClickListener {
-
                 addDot()
             }
 
         findViewById<Button>(R.id.buttonPlus)
             .setOnClickListener {
-
                 addOperator("+")
             }
 
         findViewById<Button>(R.id.buttonMinus)
             .setOnClickListener {
-
                 addOperator("-")
             }
 
         findViewById<Button>(R.id.buttonMultiply)
             .setOnClickListener {
-
                 addOperator("×")
             }
 
         findViewById<Button>(R.id.buttonDivide)
             .setOnClickListener {
-
                 addOperator("÷")
             }
 
         findViewById<Button>(R.id.buttonEquals)
             .setOnClickListener {
-
                 calculateExpression()
             }
 
         findViewById<Button>(R.id.buttonClearCalc)
             .setOnClickListener {
-
                 clearCalculator()
             }
 
         findViewById<Button>(R.id.buttonBackspace)
             .setOnClickListener {
-
                 deleteLast()
             }
 
         findViewById<Button>(R.id.buttonPercent)
             .setOnClickListener {
-
                 addPercent()
+            }
+
+        findViewById<Button>(R.id.buttonOpenBracket)
+            .setOnClickListener {
+                addOpenBracket()
+            }
+
+        findViewById<Button>(R.id.buttonCloseBracket)
+            .setOnClickListener {
+                addCloseBracket()
             }
     }
 
@@ -180,17 +163,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun addNumber(number: String) {
 
-        // Если был показан результат,
-        // начинаем новое выражение
         if (shouldStartNewNumber) {
 
             expression = number
-
             shouldStartNewNumber = false
 
         } else {
 
-            // Не даём получить 00025
             if (expression == "0") {
 
                 expression = number
@@ -213,31 +192,25 @@ class MainActivity : AppCompatActivity() {
         if (shouldStartNewNumber) {
 
             expression = "0."
-
             shouldStartNewNumber = false
 
             updateDisplay()
-
             return
         }
 
-        // Находим последнее число
-        val lastNumber =
-            getLastNumber(expression)
+        val lastNumber = getLastNumber(expression)
 
-        // Если в текущем числе уже есть точка —
-        // вторую не добавляем
         if (lastNumber.contains(".")) {
-
             return
         }
 
-        // Если выражение заканчивается оператором
         if (
+            expression.isEmpty() ||
             expression.endsWith("+") ||
             expression.endsWith("-") ||
             expression.endsWith("×") ||
-            expression.endsWith("÷")
+            expression.endsWith("÷") ||
+            expression.endsWith("(")
         ) {
 
             expression += "0."
@@ -251,17 +224,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =====================================================
-    // ОПЕРАТОР
+    // ПЛЮС / МИНУС / УМНОЖЕНИЕ / ДЕЛЕНИЕ
     // =====================================================
 
     private fun addOperator(operator: String) {
 
         if (expression.isEmpty()) {
-
             return
         }
 
-        // Нельзя поставить два оператора подряд
         if (
             expression.endsWith("+") ||
             expression.endsWith("-") ||
@@ -271,6 +242,10 @@ class MainActivity : AppCompatActivity() {
 
             expression =
                 expression.dropLast(1) + operator
+
+        } else if (expression.endsWith("(")) {
+
+            return
 
         } else {
 
@@ -283,13 +258,79 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =====================================================
+    // ОТКРЫВАЮЩАЯ СКОБКА
+    // =====================================================
+
+    private fun addOpenBracket() {
+
+        if (shouldStartNewNumber) {
+
+            expression = "("
+            shouldStartNewNumber = false
+
+        } else if (
+            expression.isEmpty() ||
+            expression.endsWith("+") ||
+            expression.endsWith("-") ||
+            expression.endsWith("×") ||
+            expression.endsWith("÷") ||
+            expression.endsWith("(")
+        ) {
+
+            expression += "("
+
+        } else {
+
+            // Например 2(3+4)
+            // автоматически превращаем в 2×(3+4)
+            expression += "×("
+        }
+
+        updateDisplay()
+    }
+
+    // =====================================================
+    // ЗАКРЫВАЮЩАЯ СКОБКА
+    // =====================================================
+
+    private fun addCloseBracket() {
+
+        if (expression.isEmpty()) {
+            return
+        }
+
+        val openCount =
+            expression.count { it == '(' }
+
+        val closeCount =
+            expression.count { it == ')' }
+
+        if (openCount <= closeCount) {
+            return
+        }
+
+        if (
+            expression.endsWith("+") ||
+            expression.endsWith("-") ||
+            expression.endsWith("×") ||
+            expression.endsWith("÷") ||
+            expression.endsWith("(")
+        ) {
+            return
+        }
+
+        expression += ")"
+
+        updateDisplay()
+    }
+
+    // =====================================================
     // ПРОЦЕНТ
     // =====================================================
 
     private fun addPercent() {
 
         if (expression.isEmpty()) {
-
             return
         }
 
@@ -300,25 +341,21 @@ class MainActivity : AppCompatActivity() {
             lastNumber.toDoubleOrNull()
 
         if (number == null) {
-
             return
         }
 
         val percent =
             number / 100.0
 
-        val formatted =
-            formatNumber(percent)
-
         expression =
             expression.dropLast(lastNumber.length) +
-                    formatted
+                    formatNumber(percent)
 
         updateDisplay()
     }
 
     // =====================================================
-    // ПОСЛЕДНЕЕ ЧИСЛО
+    // ПОЛУЧЕНИЕ ПОСЛЕДНЕГО ЧИСЛА
     // =====================================================
 
     private fun getLastNumber(text: String): String {
@@ -333,9 +370,10 @@ class MainActivity : AppCompatActivity() {
                 char == '+' ||
                 char == '-' ||
                 char == '×' ||
-                char == '÷'
+                char == '÷' ||
+                char == '(' ||
+                char == ')'
             ) {
-
                 break
             }
 
@@ -346,13 +384,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =====================================================
-    // УДАЛЕНИЕ
+    // BACKSPACE
     // =====================================================
 
     private fun deleteLast() {
 
         if (expression.isEmpty()) {
-
             return
         }
 
@@ -361,14 +398,15 @@ class MainActivity : AppCompatActivity() {
 
         if (expression.isEmpty()) {
 
-            expression = "0"
+            expression = ""
+            shouldStartNewNumber = true
         }
 
         updateDisplay()
     }
 
     // =====================================================
-    // ОЧИСТКА
+    // AC
     // =====================================================
 
     private fun clearCalculator() {
@@ -381,36 +419,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =====================================================
-    // ПОКАЗ НА ЭКРАНЕ
+    // ЭКРАН
     // =====================================================
 
     private fun updateDisplay() {
 
-        if (expression.isEmpty()) {
-
-            calculatorDisplay.text = "0"
-
-        } else {
-
-            calculatorDisplay.text = expression
-        }
+        calculatorDisplay.text =
+            if (expression.isEmpty()) {
+                "0"
+            } else {
+                expression
+            }
     }
 
     // =====================================================
-    // ВЫЧИСЛЕНИЕ ВСЕГО ВЫРАЖЕНИЯ
+    // ВЫЧИСЛЕНИЕ
     // =====================================================
 
     private fun calculateExpression() {
 
         if (expression.isEmpty()) {
-
             return
         }
 
-        // Если выражение заканчивается оператором,
-        // удаляем его
-        var cleanExpression =
-            expression
+        var cleanExpression = expression
 
         while (
             cleanExpression.endsWith("+") ||
@@ -424,6 +456,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (cleanExpression.isEmpty()) {
+            return
+        }
+
+        val openCount =
+            cleanExpression.count { it == '(' }
+
+        val closeCount =
+            cleanExpression.count { it == ')' }
+
+        if (openCount != closeCount) {
+
+            calculatorDisplay.text =
+                "Ошибка: проверьте скобки"
 
             return
         }
@@ -439,4 +484,459 @@ class MainActivity : AppCompatActivity() {
             calculatorDisplay.text =
                 "$cleanExpression = $formattedAnswer"
 
-            // После "=" след
+            expression = formattedAnswer
+
+            shouldStartNewNumber = true
+
+        } catch (e: ArithmeticException) {
+
+            calculatorDisplay.text =
+                "Ошибка: деление на 0"
+
+            shouldStartNewNumber = true
+
+        } catch (e: Exception) {
+
+            calculatorDisplay.text =
+                "Ошибка"
+
+            shouldStartNewNumber = true
+        }
+    }
+
+    // =====================================================
+    // МАТЕМАТИЧЕСКИЙ ПАРСЕР
+    // =====================================================
+
+    private class ExpressionParser(
+        private val text: String
+    ) {
+
+        private var position = 0
+
+        fun parse(): Double {
+
+            val result =
+                parseExpression()
+
+            skipSpaces()
+
+            if (position != text.length) {
+                throw IllegalArgumentException()
+            }
+
+            return result
+        }
+
+        // + и -
+        private fun parseExpression(): Double {
+
+            var value =
+                parseTerm()
+
+            while (true) {
+
+                skipSpaces()
+
+                if (match('+')) {
+
+                    value += parseTerm()
+
+                } else if (match('-')) {
+
+                    value -= parseTerm()
+
+                } else {
+
+                    break
+                }
+            }
+
+            return value
+        }
+
+        // × и ÷
+        private fun parseTerm(): Double {
+
+            var value =
+                parseFactor()
+
+            while (true) {
+
+                skipSpaces()
+
+                if (match('×')) {
+
+                    value *= parseFactor()
+
+                } else if (match('÷')) {
+
+                    val divisor =
+                        parseFactor()
+
+                    if (divisor == 0.0) {
+                        throw ArithmeticException()
+                    }
+
+                    value /= divisor
+
+                } else {
+
+                    break
+                }
+            }
+
+            return value
+        }
+
+        // Отрицательные числа
+        private fun parseFactor(): Double {
+
+            skipSpaces()
+
+            if (match('+')) {
+                return parseFactor()
+            }
+
+            if (match('-')) {
+                return -parseFactor()
+            }
+
+            return parsePrimary()
+        }
+
+        // Число или скобки
+        private fun parsePrimary(): Double {
+
+            skipSpaces()
+
+            if (match('(')) {
+
+                val value =
+                    parseExpression()
+
+                skipSpaces()
+
+                if (!match(')')) {
+                    throw IllegalArgumentException()
+                }
+
+                return value
+            }
+
+            return parseNumber()
+        }
+
+        private fun parseNumber(): Double {
+
+            skipSpaces()
+
+            val start =
+                position
+
+            var hasDot = false
+
+            while (position < text.length) {
+
+                val char =
+                    text[position]
+
+                if (char.isDigit()) {
+
+                    position++
+
+                } else if (char == '.' && !hasDot) {
+
+                    hasDot = true
+                    position++
+
+                } else {
+
+                    break
+                }
+            }
+
+            if (start == position) {
+                throw IllegalArgumentException()
+            }
+
+            return text
+                .substring(start, position)
+                .toDouble()
+        }
+
+        private fun match(char: Char): Boolean {
+
+            if (
+                position < text.length &&
+                text[position] == char
+            ) {
+
+                position++
+
+                return true
+            }
+
+            return false
+        }
+
+        private fun skipSpaces() {
+
+            while (
+                position < text.length &&
+                text[position].isWhitespace()
+            ) {
+
+                position++
+            }
+        }
+    }
+
+    // =====================================================
+    // ЗАПУСК ПАРСЕРА
+    // =====================================================
+
+    private fun evaluateExpression(
+        expressionText: String
+    ): Double {
+
+        return ExpressionParser(
+            expressionText
+        ).parse()
+    }
+
+    // =====================================================
+    // ФОРМАТ ЧИСЛА
+    // =====================================================
+
+    private fun formatNumber(
+        number: Double
+    ): String {
+
+        if (
+            number.isFinite() &&
+            number == number.toLong().toDouble()
+        ) {
+
+            return number.toLong().toString()
+        }
+
+        return String.format(
+            Locale.US,
+            "%.8f",
+            number
+        )
+            .trimEnd('0')
+            .trimEnd('.')
+    }
+
+    // =====================================================
+    // AI
+    // =====================================================
+
+    private fun sendToAI(text: String) {
+
+        val json =
+            JSONObject()
+
+        json.put(
+            "text",
+            text
+        )
+
+        val mediaType =
+            "application/json; charset=utf-8"
+                .toMediaType()
+
+        val body =
+            json.toString()
+                .toRequestBody(mediaType)
+
+        val request =
+            Request.Builder()
+                .url(
+                    "https://umnyy-calculator-ai-server.onrender.com/v1/calculate"
+                )
+                .post(body)
+                .addHeader(
+                    "Content-Type",
+                    "application/json"
+                )
+                .build()
+
+        client.newCall(request)
+            .enqueue(
+                object : Callback {
+
+                    override fun onFailure(
+                        call: Call,
+                        e: IOException
+                    ) {
+
+                        runOnUiThread {
+
+                            result.text =
+                                "❌ Ошибка подключения к AI\n\n${e.message}"
+                        }
+                    }
+
+                    override fun onResponse(
+                        call: Call,
+                        response: Response
+                    ) {
+
+                        val responseText =
+                            response.body?.string()
+
+                        runOnUiThread {
+
+                            if (!response.isSuccessful) {
+
+                                result.text =
+                                    "❌ Ошибка AI: ${response.code}"
+
+                                return@runOnUiThread
+                            }
+
+                            try {
+
+                                val jsonResponse =
+                                    JSONObject(
+                                        responseText ?: "{}"
+                                    )
+
+                                val answer =
+                                    jsonResponse.optString(
+                                        "result",
+                                        ""
+                                    )
+
+                                val explanation =
+                                    jsonResponse.optString(
+                                        "explanation",
+                                        ""
+                                    )
+
+                                val finalAnswer =
+                                    if (
+                                        explanation.isNotEmpty()
+                                    ) {
+
+                                        "$answer\n\n$explanation"
+
+                                    } else {
+
+                                        answer
+                                    }
+
+                                result.text =
+                                    finalAnswer
+
+                                addToHistory(
+                                    text,
+                                    finalAnswer
+                                )
+
+                            } catch (e: Exception) {
+
+                                result.text =
+                                    "❌ Не удалось обработать ответ AI"
+                            }
+                        }
+                    }
+                }
+            )
+    }
+
+    // =====================================================
+    // ИСТОРИЯ
+    // =====================================================
+
+    private fun addToHistory(
+        question: String,
+        answer: String
+    ) {
+
+        val preferences =
+            getSharedPreferences(
+                preferencesName,
+                Context.MODE_PRIVATE
+            )
+
+        val oldHistory =
+            preferences.getString(
+                historyKey,
+                ""
+            ) ?: ""
+
+        val newEntry =
+            "Вопрос: $question\nОтвет: $answer"
+
+        val newHistory =
+            if (oldHistory.isEmpty()) {
+
+                newEntry
+
+            } else {
+
+                "$newEntry\n\n$oldHistory"
+            }
+
+        val limitedHistory =
+            newHistory
+                .split("\n\n")
+                .take(10)
+                .joinToString("\n\n")
+
+        preferences.edit()
+            .putString(
+                historyKey,
+                limitedHistory
+            )
+            .apply()
+
+        history.text =
+            limitedHistory
+    }
+
+    private fun loadHistory() {
+
+        val preferences =
+            getSharedPreferences(
+                preferencesName,
+                Context.MODE_PRIVATE
+            )
+
+        val savedHistory =
+            preferences.getString(
+                historyKey,
+                ""
+            ) ?: ""
+
+        history.text =
+            if (savedHistory.isEmpty()) {
+
+                "История расчётов пока пуста"
+
+            } else {
+
+                savedHistory
+            }
+    }
+
+    private fun clearHistory() {
+
+        val preferences =
+            getSharedPreferences(
+                preferencesName,
+                Context.MODE_PRIVATE
+            )
+
+        preferences.edit()
+            .remove(historyKey)
+            .apply()
+
+        history.text =
+            "История расчётов пока пуста"
+    }
+}
