@@ -13,6 +13,8 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <!-- ЗАГОЛОВОК -->
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -66,7 +68,7 @@
             android:textColor="#FFFFFF"
             android:layout_marginTop="12dp" />
 
-        <!-- КАЛЬКУЛЯТОР -->
+        <!-- ОБЫЧНЫЙ КАЛЬКУЛЯТОР -->
 
         <TextView
             android:layout_width="match_parent"
@@ -89,6 +91,8 @@
             android:gravity="center_vertical|end"
             android:padding="16dp" />
 
+        <!-- КНОПКИ -->
+
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -96,6 +100,8 @@
             android:rowCount="5"
             android:useDefaultMargins="true"
             android:layout_marginTop="8dp">
+
+            <!-- СТРОКА 1 -->
 
             <Button
                 android:id="@+id/buttonClearCalc"
@@ -129,6 +135,8 @@
                 android:text="÷"
                 android:textSize="20sp" />
 
+            <!-- СТРОКА 2 -->
+
             <Button
                 android:id="@+id/button7"
                 android:layout_width="0dp"
@@ -160,6 +168,8 @@
                 android:layout_columnWeight="1"
                 android:text="×"
                 android:textSize="20sp" />
+
+            <!-- СТРОКА 3 -->
 
             <Button
                 android:id="@+id/button4"
@@ -193,6 +203,8 @@
                 android:text="−"
                 android:textSize="20sp" />
 
+            <!-- СТРОКА 4 -->
+
             <Button
                 android:id="@+id/button1"
                 android:layout_width="0dp"
@@ -225,11 +237,14 @@
                 android:text="+"
                 android:textSize="20sp" />
 
+            <!-- СТРОКА 5 -->
+
             <Button
                 android:id="@+id/button0"
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_columnSpan="2"
+                android:layout_columnWeight="2"
                 android:text="0"
                 android:textSize="20sp" />
 
