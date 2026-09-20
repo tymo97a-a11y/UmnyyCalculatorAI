@@ -11,9 +11,10 @@ import androidx.appcompat.app.AppCompatActivity
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody
 import org.json.JSONObject
 import java.io.IOException
 import java.util.Locale
@@ -33,13 +34,17 @@ class MainActivity : AppCompatActivity() {
     private val serverUrl =
         "https://umnyy-calculator-ai-server.onrender.com/v1/calculate"
 
+    private val imageServerUrl =
+        "https://umnyy-calculator-ai-server.onrender.com/v1/calculate-image"
+
     private val historyList = mutableListOf<String>()
 
     private var selectedPhotoUri: Uri? = null
 
-    /*
-     * Выбор фотографии из галереи.
-     */
+    // =========================================================
+    // ВЫБОР ФОТО
+    // =========================================================
+
     private val photoPicker =
         registerForActivityResult(
             ActivityResultContracts.GetContent()
@@ -49,15 +54,16 @@ class MainActivity : AppCompatActivity() {
 
                 selectedPhotoUri = uri
 
-                photoStatus.visibility = TextView.VISIBLE
+                photoStatus.visibility =
+                    TextView.VISIBLE
 
                 photoStatus.text =
                     "📷 Фото выбрано.\n" +
-                    "Следующим шагом AI распознает задачу на изображении."
+                    "Нажми ещё раз, чтобы отправить его AI."
 
                 result.text =
-                    "📷 Фото готово к обработке AI.\n\n" +
-                    "Функция распознавания будет подключена следующим шагом."
+                    "📷 Фото готово.\n\n" +
+                    "AI сможет распознать задачу на изображении."
 
                 Toast.makeText(
                     this,
@@ -67,18 +73,56 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    // =========================================================
+    // ON CREATE
+    // =========================================================
 
-        setContentView(R.layout.activity_main)
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
 
-        input = findViewById(R.id.input)
-        result = findViewById(R.id.result)
-        calculatorDisplay = findViewById(R.id.calculatorDisplay)
-        history = findViewById(R.id.history)
-        calculateButton = findViewById(R.id.calculateButton)
-        photoButton = findViewById(R.id.photoButton)
-        photoStatus = findViewById(R.id.photoStatus)
+        super.onCreate(
+            savedInstanceState
+        )
+
+        setContentView(
+            R.layout.activity_main
+        )
+
+        input =
+            findViewById(
+                R.id.input
+            )
+
+        result =
+            findViewById(
+                R.id.result
+            )
+
+        calculatorDisplay =
+            findViewById(
+                R.id.calculatorDisplay
+            )
+
+        history =
+            findViewById(
+                R.id.history
+            )
+
+        calculateButton =
+            findViewById(
+                R.id.calculateButton
+            )
+
+        photoButton =
+            findViewById(
+                R.id.photoButton
+            )
+
+        photoStatus =
+            findViewById(
+                R.id.photoStatus
+            )
 
         setupCalculator()
         setupAI()
@@ -87,7 +131,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // AI
+    // TEXT AI
     // =========================================================
 
     private fun setupAI() {
@@ -95,7 +139,9 @@ class MainActivity : AppCompatActivity() {
         calculateButton.setOnClickListener {
 
             val text =
-                input.text.toString().trim()
+                input.text
+                    .toString()
+                    .trim()
 
             if (text.isEmpty()) {
 
@@ -112,15 +158,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendToAI(text: String) {
+    private fun sendToAI(
+        text: String
+    ) {
 
-        calculateButton.isEnabled = false
-        calculateButton.text = "Считаю..."
+        calculateButton.isEnabled =
+            false
+
+        calculateButton.text =
+            "Считаю..."
 
         result.text =
             "🤖 AI анализирует задачу..."
 
-        val json = JSONObject()
+        val json =
+            JSONObject()
 
         json.put(
             "text",
@@ -144,8 +196,10 @@ class MainActivity : AppCompatActivity() {
                 )
                 .build()
 
-        client.newCall(request)
-            .enqueue(object : Callback {
+        client.newCall(
+            request
+        ).enqueue(
+            object : Callback {
 
                 override fun onFailure(
                     call: Call,
@@ -162,11 +216,11 @@ class MainActivity : AppCompatActivity() {
 
                         result.text =
                             "❌ Не удалось подключиться к AI.\n\n" +
-                            "Проверь интернет-соединение и попробуй ещё раз."
+                            "Проверь интернет-соединение."
 
                         Toast.makeText(
                             this@MainActivity,
-                            "Ошибка подключения к серверу",
+                            "Ошибка подключения",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -180,7 +234,8 @@ class MainActivity : AppCompatActivity() {
                     response.use {
 
                         val responseText =
-                            it.body?.string().orEmpty()
+                            it.body?.string()
+                                .orEmpty()
 
                         if (!it.isSuccessful) {
 
@@ -203,7 +258,9 @@ class MainActivity : AppCompatActivity() {
                         try {
 
                             val jsonResponse =
-                                JSONObject(responseText)
+                                JSONObject(
+                                    responseText
+                                )
 
                             val aiResult =
                                 jsonResponse.optString(
@@ -224,18 +281,16 @@ class MainActivity : AppCompatActivity() {
                                         "ИТОГ:\n"
                                     )
 
-                                    append(aiResult)
+                                    append(
+                                        aiResult
+                                    )
 
                                     if (
                                         explanation.isNotBlank()
                                     ) {
 
                                         append(
-                                            "\n\n"
-                                        )
-
-                                        append(
-                                            "ОБЪЯСНЕНИЕ:\n"
+                                            "\n\nОБЪЯСНЕНИЕ:\n"
                                         )
 
                                         append(
@@ -260,7 +315,9 @@ class MainActivity : AppCompatActivity() {
                                 )
                             }
 
-                        } catch (e: Exception) {
+                        } catch (
+                            e: Exception
+                        ) {
 
                             runOnUiThread {
 
@@ -276,7 +333,8 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-            })
+            }
+        )
     }
 
     // =========================================================
@@ -287,8 +345,282 @@ class MainActivity : AppCompatActivity() {
 
         photoButton.setOnClickListener {
 
-            photoPicker.launch("image/*")
+            if (selectedPhotoUri == null) {
+
+                photoPicker.launch(
+                    "image/*"
+                )
+
+            } else {
+
+                sendPhotoToAI(
+                    selectedPhotoUri!!
+                )
+            }
         }
+    }
+
+    // =========================================================
+    // ОТПРАВКА ФОТО В AI
+    // =========================================================
+
+    private fun sendPhotoToAI(
+        uri: Uri
+    ) {
+
+        photoButton.isEnabled =
+            false
+
+        photoButton.text =
+            "🤖 Анализирую фото..."
+
+        result.text =
+            "🤖 AI распознаёт задачу на фотографии..."
+
+        photoStatus.visibility =
+            TextView.VISIBLE
+
+        photoStatus.text =
+            "⏳ Отправляю изображение AI..."
+
+        Thread {
+
+            try {
+
+                val contentResolver =
+                    contentResolver
+
+                val inputStream =
+                    contentResolver.openInputStream(
+                        uri
+                    )
+
+                if (inputStream == null) {
+
+                    throw IOException(
+                        "Не удалось открыть изображение"
+                    )
+                }
+
+                val imageBytes =
+                    inputStream.use {
+                        it.readBytes()
+                    }
+
+                if (imageBytes.isEmpty()) {
+
+                    throw IOException(
+                        "Изображение пустое"
+                    )
+                }
+
+                val mimeType =
+                    contentResolver
+                        .getType(uri)
+                        ?: "image/jpeg"
+
+                val requestBody =
+                    RequestBody.create(
+                        mimeType.toMediaType(),
+                        imageBytes
+                    )
+
+                val multipartBody =
+                    MultipartBody.Builder()
+                        .setType(
+                            MultipartBody.FORM
+                        )
+                        .addFormDataPart(
+                            "file",
+                            "calculator_photo.jpg",
+                            requestBody
+                        )
+                        .build()
+
+                val request =
+                    Request.Builder()
+                        .url(
+                            imageServerUrl
+                        )
+                        .post(
+                            multipartBody
+                        )
+                        .build()
+
+                client.newCall(
+                    request
+                ).enqueue(
+                    object : Callback {
+
+                        override fun onFailure(
+                            call: Call,
+                            e: IOException
+                        ) {
+
+                            runOnUiThread {
+
+                                photoButton.isEnabled =
+                                    true
+
+                                photoButton.text =
+                                    "📷 Рассчитать по фото"
+
+                                photoStatus.text =
+                                    "❌ Не удалось отправить фото."
+
+                                result.text =
+                                    "❌ Ошибка подключения к серверу.\n\n" +
+                                    "Попробуй ещё раз."
+                            }
+                        }
+
+                        override fun onResponse(
+                            call: Call,
+                            response: okhttp3.Response
+                        ) {
+
+                            response.use {
+
+                                val responseText =
+                                    it.body?.string()
+                                        .orEmpty()
+
+                                if (!it.isSuccessful) {
+
+                                    runOnUiThread {
+
+                                        photoButton.isEnabled =
+                                            true
+
+                                        photoButton.text =
+                                            "📷 Рассчитать по фото"
+
+                                        photoStatus.text =
+                                            "❌ Сервер не смог обработать фото."
+
+                                        result.text =
+                                            "❌ Ошибка сервера.\n\n" +
+                                            "Код: ${it.code}\n\n" +
+                                            responseText.take(
+                                                500
+                                            )
+                                    }
+
+                                    return
+                                }
+
+                                try {
+
+                                    val jsonResponse =
+                                        JSONObject(
+                                            responseText
+                                        )
+
+                                    val aiResult =
+                                        jsonResponse.optString(
+                                            "result",
+                                            "Результат не получен"
+                                        )
+
+                                    val explanation =
+                                        jsonResponse.optString(
+                                            "explanation",
+                                            ""
+                                        )
+
+                                    val finalText =
+                                        buildString {
+
+                                            append(
+                                                "📷 РЕЗУЛЬТАТ:\n\n"
+                                            )
+
+                                            append(
+                                                aiResult
+                                            )
+
+                                            if (
+                                                explanation.isNotBlank()
+                                            ) {
+
+                                                append(
+                                                    "\n\nОБЪЯСНЕНИЕ:\n"
+                                                )
+
+                                                append(
+                                                    explanation
+                                                )
+                                            }
+                                        }
+
+                                    runOnUiThread {
+
+                                        photoButton.isEnabled =
+                                            true
+
+                                        photoButton.text =
+                                            "📷 Рассчитать по фото"
+
+                                        photoStatus.text =
+                                            "✅ Фото успешно обработано AI"
+
+                                        result.text =
+                                            finalText
+
+                                        addHistory(
+                                            "📷 Фото\n→ $aiResult"
+                                        )
+
+                                        selectedPhotoUri =
+                                            null
+                                    }
+
+                                } catch (
+                                    e: Exception
+                                ) {
+
+                                    runOnUiThread {
+
+                                        photoButton.isEnabled =
+                                            true
+
+                                        photoButton.text =
+                                            "📷 Рассчитать по фото"
+
+                                        photoStatus.text =
+                                            "❌ Ошибка обработки ответа."
+
+                                        result.text =
+                                            "❌ AI вернул ответ в неизвестном формате."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )
+
+            } catch (
+                e: Exception
+            ) {
+
+                runOnUiThread {
+
+                    photoButton.isEnabled =
+                        true
+
+                    photoButton.text =
+                        "📷 Рассчитать по фото"
+
+                    photoStatus.text =
+                        "❌ Не удалось прочитать фотографию."
+
+                    result.text =
+                        "❌ Ошибка чтения изображения.\n\n" +
+                        e.message
+                }
+            }
+
+        }.start()
     }
 
     // =========================================================
@@ -311,20 +643,27 @@ class MainActivity : AppCompatActivity() {
                 R.id.button9 to "9"
             )
 
-        for ((id, value) in numbers) {
+        for (
+            (id, value) in numbers
+        ) {
 
-            findViewById<Button>(id)
-                .setOnClickListener {
+            findViewById<Button>(
+                id
+            ).setOnClickListener {
 
-                    addToExpression(value)
-                }
+                addToExpression(
+                    value
+                )
+            }
         }
 
         findViewById<Button>(
             R.id.buttonDot
         ).setOnClickListener {
 
-            addToExpression(".")
+            addToExpression(
+                "."
+            )
         }
 
         findViewById<Button>(
@@ -440,7 +779,9 @@ class MainActivity : AppCompatActivity() {
             current == "0"
         ) {
 
-            if (operator == "-") {
+            if (
+                operator == "-"
+            ) {
 
                 calculatorDisplay.text =
                     "-"
@@ -476,7 +817,9 @@ class MainActivity : AppCompatActivity() {
         val current =
             calculatorDisplay.text.toString()
 
-        if (current == "0") {
+        if (
+            current == "0"
+        ) {
 
             calculatorDisplay.text =
                 "("
@@ -509,7 +852,9 @@ class MainActivity : AppCompatActivity() {
         val current =
             calculatorDisplay.text.toString()
 
-        if (current.isEmpty()) {
+        if (
+            current.isEmpty()
+        ) {
             return
         }
 
@@ -548,7 +893,9 @@ class MainActivity : AppCompatActivity() {
         val current =
             calculatorDisplay.text.toString()
 
-        if (current.isNotEmpty()) {
+        if (
+            current.isNotEmpty()
+        ) {
 
             val last =
                 current.last()
@@ -570,7 +917,9 @@ class MainActivity : AppCompatActivity() {
         val current =
             calculatorDisplay.text.toString()
 
-        if (current.length <= 1) {
+        if (
+            current.length <= 1
+        ) {
 
             calculatorDisplay.text =
                 "0"
@@ -597,10 +946,22 @@ class MainActivity : AppCompatActivity() {
         val expression =
             calculatorDisplay.text
                 .toString()
-                .replace("×", "*")
-                .replace("÷", "/")
-                .replace("−", "-")
-                .replace(",", ".")
+                .replace(
+                    "×",
+                    "*"
+                )
+                .replace(
+                    "÷",
+                    "/"
+                )
+                .replace(
+                    "−",
+                    "-"
+                )
+                .replace(
+                    ",",
+                    "."
+                )
 
         if (
             expression.isBlank() ||
@@ -617,7 +978,9 @@ class MainActivity : AppCompatActivity() {
                 )
 
             val formatted =
-                formatNumber(value)
+                formatNumber(
+                    value
+                )
 
             calculatorDisplay.text =
                 formatted
@@ -626,7 +989,9 @@ class MainActivity : AppCompatActivity() {
                 "$expression = $formatted"
             )
 
-        } catch (e: Exception) {
+        } catch (
+            e: Exception
+        ) {
 
             calculatorDisplay.text =
                 "Ошибка"
@@ -762,7 +1127,9 @@ class MainActivity : AppCompatActivity() {
                 ""
             ).orEmpty()
 
-        if (saved.isNotEmpty()) {
+        if (
+            saved.isNotEmpty()
+        ) {
 
             historyList.clear()
 
@@ -832,7 +1199,9 @@ class MainActivity : AppCompatActivity() {
 
                 skipSpaces()
 
-                if (match('+')) {
+                if (
+                    match('+')
+                ) {
 
                     result +=
                         parseTerm()
@@ -860,7 +1229,9 @@ class MainActivity : AppCompatActivity() {
 
                 skipSpaces()
 
-                if (match('*')) {
+                if (
+                    match('*')
+                ) {
 
                     result *=
                         parseFactor()
@@ -894,22 +1265,30 @@ class MainActivity : AppCompatActivity() {
 
             skipSpaces()
 
-            if (match('+')) {
+            if (
+                match('+')
+            ) {
                 return parseFactor()
             }
 
-            if (match('-')) {
+            if (
+                match('-')
+            ) {
                 return -parseFactor()
             }
 
             val result: Double
 
-            if (match('(')) {
+            if (
+                match('(')
+            ) {
 
                 result =
                     parseExpression()
 
-                if (!match(')')) {
+                if (
+                    !match(')')
+                ) {
 
                     throw IllegalArgumentException(
                         "Не закрыта скобка"
@@ -927,7 +1306,9 @@ class MainActivity : AppCompatActivity() {
             var finalResult =
                 result
 
-            while (match('%')) {
+            while (
+                match('%')
+            ) {
 
                 finalResult /=
                     100.0
