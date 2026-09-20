@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,6 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var calculateButton: Button
     private lateinit var photoButton: Button
     private lateinit var photoStatus: TextView
+    private lateinit var photoPreview: ImageView
 
     private val client = OkHttpClient()
 
@@ -41,10 +43,6 @@ class MainActivity : AppCompatActivity() {
 
     private var selectedPhotoUri: Uri? = null
 
-    // =========================================================
-    // ВЫБОР ФОТО
-    // =========================================================
-
     private val photoPicker =
         registerForActivityResult(
             ActivityResultContracts.GetContent()
@@ -54,28 +52,33 @@ class MainActivity : AppCompatActivity() {
 
                 selectedPhotoUri = uri
 
+                // Показываем фотографию
+                photoPreview.setImageURI(uri)
+
+                photoPreview.visibility =
+                    ImageView.VISIBLE
+
+                // Показываем статус
                 photoStatus.visibility =
                     TextView.VISIBLE
 
                 photoStatus.text =
-                    "📷 Фото выбрано.\n" +
-                    "Нажми ещё раз, чтобы отправить его AI."
+                    "✅ Фото загружено\n" +
+                    "Нажми «Рассчитать по фото» ещё раз."
 
                 result.text =
-                    "📷 Фото готово.\n\n" +
-                    "AI сможет распознать задачу на изображении."
+                    "📷 Фото готово к обработке AI."
+
+                photoButton.text =
+                    "🤖 Рассчитать это фото"
 
                 Toast.makeText(
                     this,
-                    "Фото выбрано",
+                    "Фото загружено",
                     Toast.LENGTH_SHORT
                 ).show()
             }
         }
-
-    // =========================================================
-    // ON CREATE
-    // =========================================================
 
     override fun onCreate(
         savedInstanceState: Bundle?
@@ -90,49 +93,34 @@ class MainActivity : AppCompatActivity() {
         )
 
         input =
-            findViewById(
-                R.id.input
-            )
+            findViewById(R.id.input)
 
         result =
-            findViewById(
-                R.id.result
-            )
+            findViewById(R.id.result)
 
         calculatorDisplay =
-            findViewById(
-                R.id.calculatorDisplay
-            )
+            findViewById(R.id.calculatorDisplay)
 
         history =
-            findViewById(
-                R.id.history
-            )
+            findViewById(R.id.history)
 
         calculateButton =
-            findViewById(
-                R.id.calculateButton
-            )
+            findViewById(R.id.calculateButton)
 
         photoButton =
-            findViewById(
-                R.id.photoButton
-            )
+            findViewById(R.id.photoButton)
 
         photoStatus =
-            findViewById(
-                R.id.photoStatus
-            )
+            findViewById(R.id.photoStatus)
+
+        photoPreview =
+            findViewById(R.id.photoPreview)
 
         setupCalculator()
         setupAI()
         setupPhoto()
         loadHistory()
     }
-
-    // =========================================================
-    // TEXT AI
-    // =========================================================
 
     private fun setupAI() {
 
@@ -344,13 +332,21 @@ class MainActivity : AppCompatActivity() {
 
         photoButton.setOnClickListener {
 
-            if (selectedPhotoUri == null) {
+            if (
+                selectedPhotoUri == null
+            ) {
+
+                // Первый клик —
+                // выбрать фотографию
 
                 photoPicker.launch(
                     "image/*"
                 )
 
             } else {
+
+                // Второй клик —
+                // отправить фотографию AI
 
                 sendPhotoToAI(
                     selectedPhotoUri!!
@@ -360,7 +356,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ОТПРАВКА ФОТО В AI
+    // ОТПРАВКА ФОТО
     // =========================================================
 
     private fun sendPhotoToAI(
@@ -373,14 +369,11 @@ class MainActivity : AppCompatActivity() {
         photoButton.text =
             "🤖 Анализирую фото..."
 
-        result.text =
-            "🤖 AI распознаёт задачу на фотографии..."
-
-        photoStatus.visibility =
-            TextView.VISIBLE
-
         photoStatus.text =
-            "⏳ Отправляю изображение AI..."
+            "⏳ AI распознаёт задачу..."
+
+        result.text =
+            "🤖 AI анализирует фотографию..."
 
         Thread {
 
@@ -391,7 +384,9 @@ class MainActivity : AppCompatActivity() {
                         uri
                     )
 
-                if (inputStream == null) {
+                if (
+                    inputStream == null
+                ) {
 
                     throw IOException(
                         "Не удалось открыть изображение"
@@ -403,7 +398,9 @@ class MainActivity : AppCompatActivity() {
                         it.readBytes()
                     }
 
-                if (imageBytes.isEmpty()) {
+                if (
+                    imageBytes.isEmpty()
+                ) {
 
                     throw IOException(
                         "Изображение пустое"
@@ -462,11 +459,10 @@ class MainActivity : AppCompatActivity() {
                                     "📷 Рассчитать по фото"
 
                                 photoStatus.text =
-                                    "❌ Не удалось отправить фото."
+                                    "❌ Ошибка отправки фото."
 
                                 result.text =
-                                    "❌ Ошибка подключения к серверу.\n\n" +
-                                    "Попробуй ещё раз."
+                                    "❌ Не удалось подключиться к серверу."
                             }
                         }
 
@@ -481,7 +477,9 @@ class MainActivity : AppCompatActivity() {
                                     it.body?.string()
                                         .orEmpty()
 
-                                if (!it.isSuccessful) {
+                                if (
+                                    !it.isSuccessful
+                                ) {
 
                                     runOnUiThread {
 
@@ -492,14 +490,10 @@ class MainActivity : AppCompatActivity() {
                                             "📷 Рассчитать по фото"
 
                                         photoStatus.text =
-                                            "❌ Сервер не смог обработать фото."
+                                            "❌ Ошибка обработки фотографии."
 
                                         result.text =
-                                            "❌ Ошибка сервера.\n\n" +
-                                            "Код: ${it.code}\n\n" +
-                                            responseText.take(
-                                                500
-                                            )
+                                            "Код ошибки: ${it.code}"
                                     }
 
                                     return
@@ -567,6 +561,10 @@ class MainActivity : AppCompatActivity() {
                                             "📷 Фото\n→ $aiResult"
                                         )
 
+                                        // Очищаем выбранный URI,
+                                        // чтобы следующее нажатие
+                                        // снова открыло галерею
+
                                         selectedPhotoUri =
                                             null
                                     }
@@ -584,10 +582,10 @@ class MainActivity : AppCompatActivity() {
                                             "📷 Рассчитать по фото"
 
                                         photoStatus.text =
-                                            "❌ Ошибка обработки ответа."
+                                            "❌ Ошибка ответа AI."
 
                                         result.text =
-                                            "❌ AI вернул ответ в неизвестном формате."
+                                            "Не удалось обработать ответ."
                                     }
                                 }
                             }
@@ -608,11 +606,10 @@ class MainActivity : AppCompatActivity() {
                         "📷 Рассчитать по фото"
 
                     photoStatus.text =
-                        "❌ Не удалось прочитать фотографию."
+                        "❌ Не удалось прочитать фото."
 
                     result.text =
-                        "❌ Ошибка чтения изображения.\n\n" +
-                        e.message
+                        "Ошибка чтения фотографии."
                 }
             }
 
@@ -620,7 +617,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ОБЫЧНЫЙ КАЛЬКУЛЯТОР
+    // КАЛЬКУЛЯТОР
     // =========================================================
 
     private fun setupCalculator() {
@@ -657,9 +654,7 @@ class MainActivity : AppCompatActivity() {
             R.id.buttonDot
         ).setOnClickListener {
 
-            addToExpression(
-                "."
-            )
+            addToExpression(".")
         }
 
         findViewById<Button>(
@@ -798,7 +793,7 @@ class MainActivity : AppCompatActivity() {
 
             calculatorDisplay.text =
                 current.dropLast(1) +
-                        operator
+                operator
 
         } else {
 
@@ -933,31 +928,15 @@ class MainActivity : AppCompatActivity() {
             "0"
     }
 
-    // =========================================================
-    // ВЫЧИСЛЕНИЕ
-    // =========================================================
-
     private fun calculateExpression() {
 
         val expression =
             calculatorDisplay.text
                 .toString()
-                .replace(
-                    "×",
-                    "*"
-                )
-                .replace(
-                    "÷",
-                    "/"
-                )
-                .replace(
-                    "−",
-                    "-"
-                )
-                .replace(
-                    ",",
-                    "."
-                )
+                .replace("×", "*")
+                .replace("÷", "/")
+                .replace("−", "-")
+                .replace(",", ".")
 
         if (
             expression.isBlank() ||
@@ -974,9 +953,7 @@ class MainActivity : AppCompatActivity() {
                 )
 
             val formatted =
-                formatNumber(
-                    value
-                )
+                formatNumber(value)
 
             calculatorDisplay.text =
                 formatted
@@ -1011,10 +988,6 @@ class MainActivity : AppCompatActivity() {
 
         return parser.parse()
     }
-
-    // =========================================================
-    // ФОРМАТ ЧИСЛА
-    // =========================================================
 
     private fun formatNumber(
         number: Double
@@ -1103,7 +1076,7 @@ class MainActivity : AppCompatActivity() {
             .putString(
                 "history",
                 historyList.joinToString(
-                    "\n|||HISTORY|||"
+                    "\n|||HISTORY|||\n"
                 )
             )
             .apply()
@@ -1131,7 +1104,7 @@ class MainActivity : AppCompatActivity() {
 
             historyList.addAll(
                 saved.split(
-                    "\n|||HISTORY|||"
+                    "\n|||HISTORY|||\n"
                 )
             )
         }
