@@ -8,14 +8,15 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
 import java.util.Locale
+import java.util.Stack
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,12 +27,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var history: TextView
     private lateinit var calculatorDisplay: TextView
 
-    private var currentNumber = "0"
-    private var firstNumber: Double? = null
-    private var currentOperator: String? = null
-
+    // Полное выражение калькулятора
     private var expression = ""
 
+    // После получения результата начинаем новое число
     private var shouldStartNewNumber = true
 
     private val preferencesName = "calculator_history"
@@ -57,16 +56,25 @@ class MainActivity : AppCompatActivity() {
 
         setupCalculatorButtons()
 
+        // ==========================
+        // AI
+        // ==========================
+
         calculateButton.setOnClickListener {
 
-            val text = input.text.toString().trim()
+            val text =
+                input.text.toString().trim()
 
             if (text.isEmpty()) {
-                result.text = "Введите пример или вопрос"
+
+                result.text =
+                    "Введите пример или вопрос"
+
                 return@setOnClickListener
             }
 
-            result.text = "🤖 AI считает..."
+            result.text =
+                "🤖 AI считает..."
 
             sendToAI(text)
         }
@@ -75,19 +83,21 @@ class MainActivity : AppCompatActivity() {
 
             input.text.clear()
 
-            result.text = "Ответ появится здесь"
+            result.text =
+                "Ответ появится здесь"
 
             clearHistory()
         }
     }
 
-    // ==========================================
-    // КАЛЬКУЛЯТОР
-    // ==========================================
+    // =====================================================
+    // КНОПКИ КАЛЬКУЛЯТОРА
+    // =====================================================
 
     private fun setupCalculatorButtons() {
 
         val numbers = mapOf(
+
             R.id.button0 to "0",
             R.id.button1 to "1",
             R.id.button2 to "2",
@@ -102,10 +112,11 @@ class MainActivity : AppCompatActivity() {
 
         for ((id, number) in numbers) {
 
-            findViewById<Button>(id).setOnClickListener {
+            findViewById<Button>(id)
+                .setOnClickListener {
 
-                addNumber(number)
-            }
+                    addNumber(number)
+                }
         }
 
         findViewById<Button>(R.id.buttonDot)
@@ -117,31 +128,31 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonPlus)
             .setOnClickListener {
 
-                chooseOperator("+")
+                addOperator("+")
             }
 
         findViewById<Button>(R.id.buttonMinus)
             .setOnClickListener {
 
-                chooseOperator("-")
+                addOperator("-")
             }
 
         findViewById<Button>(R.id.buttonMultiply)
             .setOnClickListener {
 
-                chooseOperator("×")
+                addOperator("×")
             }
 
         findViewById<Button>(R.id.buttonDivide)
             .setOnClickListener {
 
-                chooseOperator("÷")
+                addOperator("÷")
             }
 
         findViewById<Button>(R.id.buttonEquals)
             .setOnClickListener {
 
-                calculateResult()
+                calculateExpression()
             }
 
         findViewById<Button>(R.id.buttonClearCalc)
@@ -153,193 +164,214 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonBackspace)
             .setOnClickListener {
 
-                deleteLastNumber()
+                deleteLast()
             }
 
         findViewById<Button>(R.id.buttonPercent)
             .setOnClickListener {
 
-                calculatePercent()
+                addPercent()
             }
     }
 
-    // ==========================================
-    // ВВОД ЧИСЕЛ
-    // ==========================================
+    // =====================================================
+    // ЧИСЛА
+    // =====================================================
 
     private fun addNumber(number: String) {
 
-        if (shouldStartNewNumber || currentNumber == "0") {
+        // Если был показан результат,
+        // начинаем новое выражение
+        if (shouldStartNewNumber) {
 
-            currentNumber = number
+            expression = number
 
             shouldStartNewNumber = false
 
         } else {
 
-            currentNumber += number
+            // Не даём получить 00025
+            if (expression == "0") {
+
+                expression = number
+
+            } else {
+
+                expression += number
+            }
         }
 
         updateDisplay()
     }
+
+    // =====================================================
+    // ТОЧКА
+    // =====================================================
 
     private fun addDot() {
 
         if (shouldStartNewNumber) {
 
-            currentNumber = "0."
+            expression = "0."
 
             shouldStartNewNumber = false
 
-        } else if (!currentNumber.contains(".")) {
+            updateDisplay()
 
-            currentNumber += "."
+            return
         }
 
-        updateDisplay()
-    }
+        // Находим последнее число
+        val lastNumber =
+            getLastNumber(expression)
 
-    // ==========================================
-    // ОПЕРАЦИЯ
-    // ==========================================
+        // Если в текущем числе уже есть точка —
+        // вторую не добавляем
+        if (lastNumber.contains(".")) {
 
-    private fun chooseOperator(operator: String) {
+            return
+        }
 
-        val number =
-            currentNumber.toDoubleOrNull() ?: 0.0
-
-        if (firstNumber != null &&
-            currentOperator != null &&
-            !shouldStartNewNumber
+        // Если выражение заканчивается оператором
+        if (
+            expression.endsWith("+") ||
+            expression.endsWith("-") ||
+            expression.endsWith("×") ||
+            expression.endsWith("÷")
         ) {
 
-            calculateResult()
+            expression += "0."
+
+        } else {
+
+            expression += "."
         }
-
-        firstNumber = number
-
-        currentOperator = operator
-
-        expression =
-            "${formatNumber(number)} $operator"
-
-        calculatorDisplay.text = expression
-
-        shouldStartNewNumber = true
-    }
-
-    // ==========================================
-    // РЕЗУЛЬТАТ
-    // ==========================================
-
-    private fun calculateResult() {
-
-        val first = firstNumber ?: return
-
-        val second =
-            currentNumber.toDoubleOrNull() ?: return
-
-        val operator =
-            currentOperator ?: return
-
-        val answer: Double
-
-        when (operator) {
-
-            "+" -> {
-
-                answer = first + second
-            }
-
-            "-" -> {
-
-                answer = first - second
-            }
-
-            "×" -> {
-
-                answer = first * second
-            }
-
-            "÷" -> {
-
-                if (second == 0.0) {
-
-                    calculatorDisplay.text =
-                        "Ошибка: деление на 0"
-
-                    return
-                }
-
-                answer = first / second
-            }
-
-            else -> return
-        }
-
-        val firstFormatted =
-            formatNumber(first)
-
-        val secondFormatted =
-            formatNumber(second)
-
-        val answerFormatted =
-            formatNumber(answer)
-
-        // Показываем полный расчёт
-        calculatorDisplay.text =
-            "$firstFormatted $operator $secondFormatted = $answerFormatted"
-
-        currentNumber = answerFormatted
-
-        firstNumber = null
-
-        currentOperator = null
-
-        expression = ""
-
-        shouldStartNewNumber = true
-    }
-
-    // ==========================================
-    // ПРОЦЕНТ
-    // ==========================================
-
-    private fun calculatePercent() {
-
-        val number =
-            currentNumber.toDoubleOrNull() ?: return
-
-        val percent =
-
-            if (firstNumber != null) {
-
-                firstNumber!! * number / 100.0
-
-            } else {
-
-                number / 100.0
-            }
-
-        currentNumber =
-            formatNumber(percent)
-
-        shouldStartNewNumber = true
 
         updateDisplay()
     }
 
-    // ==========================================
+    // =====================================================
+    // ОПЕРАТОР
+    // =====================================================
+
+    private fun addOperator(operator: String) {
+
+        if (expression.isEmpty()) {
+
+            return
+        }
+
+        // Нельзя поставить два оператора подряд
+        if (
+            expression.endsWith("+") ||
+            expression.endsWith("-") ||
+            expression.endsWith("×") ||
+            expression.endsWith("÷")
+        ) {
+
+            expression =
+                expression.dropLast(1) + operator
+
+        } else {
+
+            expression += operator
+        }
+
+        shouldStartNewNumber = false
+
+        updateDisplay()
+    }
+
+    // =====================================================
+    // ПРОЦЕНТ
+    // =====================================================
+
+    private fun addPercent() {
+
+        if (expression.isEmpty()) {
+
+            return
+        }
+
+        val lastNumber =
+            getLastNumber(expression)
+
+        val number =
+            lastNumber.toDoubleOrNull()
+
+        if (number == null) {
+
+            return
+        }
+
+        val percent =
+            number / 100.0
+
+        val formatted =
+            formatNumber(percent)
+
+        expression =
+            expression.dropLast(lastNumber.length) +
+                    formatted
+
+        updateDisplay()
+    }
+
+    // =====================================================
+    // ПОСЛЕДНЕЕ ЧИСЛО
+    // =====================================================
+
+    private fun getLastNumber(text: String): String {
+
+        var index = text.length - 1
+
+        while (index >= 0) {
+
+            val char = text[index]
+
+            if (
+                char == '+' ||
+                char == '-' ||
+                char == '×' ||
+                char == '÷'
+            ) {
+
+                break
+            }
+
+            index--
+        }
+
+        return text.substring(index + 1)
+    }
+
+    // =====================================================
+    // УДАЛЕНИЕ
+    // =====================================================
+
+    private fun deleteLast() {
+
+        if (expression.isEmpty()) {
+
+            return
+        }
+
+        expression =
+            expression.dropLast(1)
+
+        if (expression.isEmpty()) {
+
+            expression = "0"
+        }
+
+        updateDisplay()
+    }
+
+    // =====================================================
     // ОЧИСТКА
-    // ==========================================
+    // =====================================================
 
     private fun clearCalculator() {
-
-        currentNumber = "0"
-
-        firstNumber = null
-
-        currentOperator = null
 
         expression = ""
 
@@ -348,286 +380,63 @@ class MainActivity : AppCompatActivity() {
         calculatorDisplay.text = "0"
     }
 
-    // ==========================================
-    // УДАЛЕНИЕ
-    // ==========================================
+    // =====================================================
+    // ПОКАЗ НА ЭКРАНЕ
+    // =====================================================
 
-    private fun deleteLastNumber() {
+    private fun updateDisplay() {
 
-        if (shouldStartNewNumber) {
+        if (expression.isEmpty()) {
+
+            calculatorDisplay.text = "0"
+
+        } else {
+
+            calculatorDisplay.text = expression
+        }
+    }
+
+    // =====================================================
+    // ВЫЧИСЛЕНИЕ ВСЕГО ВЫРАЖЕНИЯ
+    // =====================================================
+
+    private fun calculateExpression() {
+
+        if (expression.isEmpty()) {
 
             return
         }
 
-        currentNumber =
+        // Если выражение заканчивается оператором,
+        // удаляем его
+        var cleanExpression =
+            expression
 
-            if (currentNumber.length <= 1) {
-
-                "0"
-
-            } else {
-
-                currentNumber.dropLast(1)
-            }
-
-        if (
-            currentNumber == "-" ||
-            currentNumber.isEmpty()
+        while (
+            cleanExpression.endsWith("+") ||
+            cleanExpression.endsWith("-") ||
+            cleanExpression.endsWith("×") ||
+            cleanExpression.endsWith("÷")
         ) {
 
-            currentNumber = "0"
+            cleanExpression =
+                cleanExpression.dropLast(1)
         }
 
-        updateDisplay()
-    }
+        if (cleanExpression.isEmpty()) {
 
-    // ==========================================
-    // ЭКРАН
-    // ==========================================
+            return
+        }
 
-    private fun updateDisplay() {
+        try {
 
-        if (
-            firstNumber != null &&
-            currentOperator != null
-        ) {
+            val answer =
+                evaluateExpression(cleanExpression)
+
+            val formattedAnswer =
+                formatNumber(answer)
 
             calculatorDisplay.text =
-                "$expression$currentNumber"
+                "$cleanExpression = $formattedAnswer"
 
-        } else {
-
-            calculatorDisplay.text =
-                currentNumber
-        }
-    }
-
-    // ==========================================
-    // ФОРМАТ ЧИСЛА
-    // ==========================================
-
-    private fun formatNumber(number: Double): String {
-
-        if (number == number.toLong().toDouble()) {
-
-            return number.toLong().toString()
-        }
-
-        return String.format(
-            Locale.US,
-            "%.8f",
-            number
-        )
-            .trimEnd('0')
-            .trimEnd('.')
-    }
-
-    // ==========================================
-    // AI
-    // ==========================================
-
-    private fun sendToAI(text: String) {
-
-        val json = JSONObject()
-
-        json.put("text", text)
-
-        val mediaType =
-            "application/json; charset=utf-8".toMediaType()
-
-        val body =
-            json.toString()
-                .toRequestBody(mediaType)
-
-        val request =
-            Request.Builder()
-                .url(
-                    "https://umnyy-calculator-ai-server.onrender.com/v1/calculate"
-                )
-                .post(body)
-                .addHeader(
-                    "Content-Type",
-                    "application/json"
-                )
-                .build()
-
-        client.newCall(request)
-            .enqueue(
-
-                object : Callback {
-
-                    override fun onFailure(
-                        call: Call,
-                        e: IOException
-                    ) {
-
-                        runOnUiThread {
-
-                            result.text =
-                                "❌ Ошибка подключения к AI\n\n${e.message}"
-                        }
-                    }
-
-                    override fun onResponse(
-                        call: Call,
-                        response: Response
-                    ) {
-
-                        val responseText =
-                            response.body?.string()
-
-                        runOnUiThread {
-
-                            if (!response.isSuccessful) {
-
-                                result.text =
-                                    "❌ Ошибка AI: ${response.code}"
-
-                                return@runOnUiThread
-                            }
-
-                            try {
-
-                                val jsonResponse =
-                                    JSONObject(
-                                        responseText ?: "{}"
-                                    )
-
-                                val answer =
-                                    jsonResponse.optString(
-                                        "result",
-                                        ""
-                                    )
-
-                                val explanation =
-                                    jsonResponse.optString(
-                                        "explanation",
-                                        ""
-                                    )
-
-                                val finalAnswer =
-
-                                    if (
-                                        explanation.isNotEmpty()
-                                    ) {
-
-                                        "$answer\n\n$explanation"
-
-                                    } else {
-
-                                        answer
-                                    }
-
-                                result.text =
-                                    finalAnswer
-
-                                addToHistory(
-                                    text,
-                                    finalAnswer
-                                )
-
-                            } catch (e: Exception) {
-
-                                result.text =
-                                    "❌ Не удалось обработать ответ AI"
-                            }
-                        }
-                    }
-                }
-            )
-    }
-
-    // ==========================================
-    // ИСТОРИЯ
-    // ==========================================
-
-    private fun addToHistory(
-        question: String,
-        answer: String
-    ) {
-
-        val preferences =
-            getSharedPreferences(
-                preferencesName,
-                Context.MODE_PRIVATE
-            )
-
-        val oldHistory =
-            preferences.getString(
-                historyKey,
-                ""
-            ) ?: ""
-
-        val newEntry =
-            "Вопрос: $question\nОтвет: $answer"
-
-        val newHistory =
-
-            if (oldHistory.isEmpty()) {
-
-                newEntry
-
-            } else {
-
-                "$newEntry\n\n$oldHistory"
-            }
-
-        val limitedHistory =
-            newHistory
-                .split("\n\n")
-                .take(10)
-                .joinToString("\n\n")
-
-        preferences.edit()
-            .putString(
-                historyKey,
-                limitedHistory
-            )
-            .apply()
-
-        history.text =
-            limitedHistory
-    }
-
-    private fun loadHistory() {
-
-        val preferences =
-            getSharedPreferences(
-                preferencesName,
-                Context.MODE_PRIVATE
-            )
-
-        val savedHistory =
-            preferences.getString(
-                historyKey,
-                ""
-            ) ?: ""
-
-        history.text =
-
-            if (savedHistory.isEmpty()) {
-
-                "История расчётов пока пуста"
-
-            } else {
-
-                savedHistory
-            }
-    }
-
-    private fun clearHistory() {
-
-        val preferences =
-            getSharedPreferences(
-                preferencesName,
-                Context.MODE_PRIVATE
-            )
-
-        preferences.edit()
-            .remove(historyKey)
-            .apply()
-
-        history.text =
-            "История расчётов пока пуста"
-    }
-}
+            // После "=" след
