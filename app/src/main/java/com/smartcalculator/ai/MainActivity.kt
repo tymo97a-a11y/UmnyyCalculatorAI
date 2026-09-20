@@ -1,5 +1,6 @@
 package com.smartcalculator.ai
 
+import android.content.Context
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -19,33 +20,50 @@ class MainActivity : AppCompatActivity() {
 
     private val client = OkHttpClient()
 
+    private lateinit var input: EditText
+    private lateinit var result: TextView
+    private lateinit var history: TextView
+
+    private val preferencesName = "calculator_history"
+    private val historyKey = "history"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val input = findViewById<EditText>(R.id.input)
+        input = findViewById(R.id.input)
         val calculateButton = findViewById<Button>(R.id.calculateButton)
-        val result = findViewById<TextView>(R.id.result)
+        val clearButton = findViewById<Button>(R.id.clearButton)
+        result = findViewById(R.id.result)
+        history = findViewById(R.id.history)
+
+        loadHistory()
 
         calculateButton.setOnClickListener {
 
             val text = input.text.toString().trim()
 
             if (text.isEmpty()) {
-                result.text = "Введите вопрос или пример"
+                result.text = "Введите пример или вопрос"
                 return@setOnClickListener
             }
 
-            result.text = "AI считает..."
+            result.text = "🤖 AI считает..."
 
-            sendToAI(text, result)
+            sendToAI(text)
+        }
+
+        clearButton.setOnClickListener {
+
+            input.text.clear()
+
+            result.text = "Ответ появится здесь"
+
+            clearHistory()
         }
     }
 
-    private fun sendToAI(
-        text: String,
-        result: TextView
-    ) {
+    private fun sendToAI(text: String) {
 
         val json = JSONObject()
         json.put("text", text)
@@ -77,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
                     runOnUiThread {
                         result.text =
-                            "Ошибка подключения к AI:\n${e.message}"
+                            "❌ Ошибка подключения к AI\n\n${e.message}"
                     }
                 }
 
@@ -94,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                         if (!response.isSuccessful) {
 
                             result.text =
-                                "Ошибка AI: ${response.code}\n$responseText"
+                                "❌ Ошибка AI: ${response.code}"
 
                             return@runOnUiThread
                         }
@@ -116,21 +134,109 @@ class MainActivity : AppCompatActivity() {
                                     ""
                                 )
 
-                            result.text =
+                            val finalAnswer =
                                 if (explanation.isNotEmpty()) {
                                     "$answer\n\n$explanation"
                                 } else {
                                     answer
                                 }
 
+                            result.text = finalAnswer
+
+                            addToHistory(
+                                text,
+                                finalAnswer
+                            )
+
                         } catch (e: Exception) {
 
                             result.text =
-                                "Не удалось обработать ответ AI."
+                                "❌ Не удалось обработать ответ AI"
                         }
                     }
                 }
             }
         )
+    }
+
+    private fun addToHistory(
+        question: String,
+        answer: String
+    ) {
+
+        val preferences =
+            getSharedPreferences(
+                preferencesName,
+                Context.MODE_PRIVATE
+            )
+
+        val oldHistory =
+            preferences.getString(
+                historyKey,
+                ""
+            ) ?: ""
+
+        val newEntry =
+            "Вопрос: $question\nОтвет: $answer"
+
+        val newHistory =
+            if (oldHistory.isEmpty()) {
+                newEntry
+            } else {
+                "$newEntry\n\n$oldHistory"
+            }
+
+        val limitedHistory =
+            newHistory
+                .split("\n\n")
+                .take(10)
+                .joinToString("\n\n")
+
+        preferences.edit()
+            .putString(
+                historyKey,
+                limitedHistory
+            )
+            .apply()
+
+        history.text = limitedHistory
+    }
+
+    private fun loadHistory() {
+
+        val preferences =
+            getSharedPreferences(
+                preferencesName,
+                Context.MODE_PRIVATE
+            )
+
+        val savedHistory =
+            preferences.getString(
+                historyKey,
+                ""
+            ) ?: ""
+
+        history.text =
+            if (savedHistory.isEmpty()) {
+                "История расчётов пока пуста"
+            } else {
+                savedHistory
+            }
+    }
+
+    private fun clearHistory() {
+
+        val preferences =
+            getSharedPreferences(
+                preferencesName,
+                Context.MODE_PRIVATE
+            )
+
+        preferences.edit()
+            .remove(historyKey)
+            .apply()
+
+        history.text =
+            "История расчётов пока пуста"
     }
 }
