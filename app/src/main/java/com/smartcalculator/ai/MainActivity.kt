@@ -11,7 +11,6 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
-import android.widget.Space
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,6 +43,10 @@ class MainActivity : AppCompatActivity() {
 
     private var calculatorExpression = ""
 
+    private var firstNumber = 0.0
+
+    private var operator = ""
+
     private val historyList = mutableListOf<String>()
 
     private var currentGraphFunction: ((Double) -> Double)? = null
@@ -51,12 +54,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var graphView: GraphView
 
     private val photoPicker =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        registerForActivityResult(
+            ActivityResultContracts.GetContent()
+        ) { uri ->
 
             if (uri != null) {
-
                 selectedPhotoUri = uri
-
                 openPhotoScreen(uri)
             }
         }
@@ -66,9 +69,8 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        rootContainer = findViewById(android.R.id.content)
-            .findViewById(R.id.menuAI)
-            .parent as LinearLayout
+        rootContainer =
+            findViewById<View>(R.id.menuAI).parent as LinearLayout
 
         setupMainMenu()
 
@@ -107,14 +109,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ОБЩИЕ ФУНКЦИИ ЭКРАНОВ
+    // ОБЩИЕ ФУНКЦИИ
     // =========================================================
 
     private fun clearScreen() {
 
         rootContainer.removeAllViews()
 
-        rootContainer.orientation = LinearLayout.VERTICAL
+        rootContainer.orientation =
+            LinearLayout.VERTICAL
 
         rootContainer.setPadding(
             dp(20),
@@ -137,11 +140,15 @@ class MainActivity : AppCompatActivity() {
         button.setTextColor(Color.WHITE)
 
         button.setOnClickListener {
-            setContentView(R.layout.activity_main)
 
-            rootContainer = findViewById(android.R.id.content)
-                .findViewById(R.id.menuAI)
-                .parent as LinearLayout
+            setContentView(
+                R.layout.activity_main
+            )
+
+            rootContainer =
+                findViewById<View>(
+                    R.id.menuAI
+                ).parent as LinearLayout
 
             setupMainMenu()
         }
@@ -164,11 +171,16 @@ class MainActivity : AppCompatActivity() {
 
         titleView.text = title
 
-        titleView.textColor = Color.WHITE
+        titleView.setTextColor(
+            Color.WHITE
+        )
 
         titleView.textSize = 27f
 
-        titleView.setTypeface(null, android.graphics.Typeface.BOLD)
+        titleView.setTypeface(
+            null,
+            android.graphics.Typeface.BOLD
+        )
 
         titleView.setPadding(
             0,
@@ -177,14 +189,17 @@ class MainActivity : AppCompatActivity() {
             dp(5)
         )
 
-        rootContainer.addView(titleView)
+        rootContainer.addView(
+            titleView
+        )
 
         val subtitleView = TextView(this)
 
         subtitleView.text = subtitle
 
-        subtitleView.textColor =
+        subtitleView.setTextColor(
             Color.rgb(145, 160, 184)
+        )
 
         subtitleView.textSize = 14f
 
@@ -195,12 +210,15 @@ class MainActivity : AppCompatActivity() {
             dp(20)
         )
 
-        rootContainer.addView(subtitleView)
+        rootContainer.addView(
+            subtitleView
+        )
     }
 
     private fun addScrollContent(): LinearLayout {
 
-        val scroll = ScrollView(this)
+        val scroll =
+            ScrollView(this)
 
         scroll.layoutParams =
             LinearLayout.LayoutParams(
@@ -209,7 +227,8 @@ class MainActivity : AppCompatActivity() {
                 1f
             )
 
-        val content = LinearLayout(this)
+        val content =
+            LinearLayout(this)
 
         content.orientation =
             LinearLayout.VERTICAL
@@ -232,7 +251,8 @@ class MainActivity : AppCompatActivity() {
         hint: String
     ): EditText {
 
-        val editText = EditText(this)
+        val editText =
+            EditText(this)
 
         editText.hint = hint
 
@@ -240,7 +260,9 @@ class MainActivity : AppCompatActivity() {
             Color.rgb(120, 135, 160)
         )
 
-        editText.setTextColor(Color.WHITE)
+        editText.setTextColor(
+            Color.WHITE
+        )
 
         editText.textSize = 17f
 
@@ -270,13 +292,16 @@ class MainActivity : AppCompatActivity() {
         text: String
     ): Button {
 
-        val button = Button(this)
+        val button =
+            Button(this)
 
         button.text = text
 
         button.textSize = 16f
 
-        button.setTextColor(Color.WHITE)
+        button.setTextColor(
+            Color.WHITE
+        )
 
         button.setBackgroundColor(
             Color.rgb(36, 107, 253)
@@ -295,9 +320,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun makeResultText(): TextView {
 
-        val text = TextView(this)
+        val text =
+            TextView(this)
 
-        text.textColor = Color.WHITE
+        text.setTextColor(
+            Color.WHITE
+        )
 
         text.textSize = 17f
 
@@ -339,22 +367,29 @@ class MainActivity : AppCompatActivity() {
             "Опиши задачу обычными словами"
         )
 
-        val content = addScrollContent()
+        val content =
+            addScrollContent()
 
-        val input = makeEditText(
-            "Например: 15% от 8400"
-        )
+        val input =
+            makeEditText(
+                "Например: 15% от 8400"
+            )
 
         input.minLines = 3
 
-        input.gravity = Gravity.TOP
+        input.gravity =
+            Gravity.TOP
 
         content.addView(input)
 
         val calculateButton =
-            makeButton("🤖 Рассчитать с AI")
+            makeButton(
+                "🤖 Рассчитать с AI"
+            )
 
-        content.addView(calculateButton)
+        content.addView(
+            calculateButton
+        )
 
         val result =
             makeResultText()
@@ -367,7 +402,9 @@ class MainActivity : AppCompatActivity() {
         calculateButton.setOnClickListener {
 
             val text =
-                input.text.toString().trim()
+                input.text
+                    .toString()
+                    .trim()
 
             if (text.isEmpty()) {
 
@@ -380,7 +417,8 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            calculateButton.isEnabled = false
+            calculateButton.isEnabled =
+                false
 
             result.text =
                 "⏳ AI решает задачу..."
@@ -430,7 +468,8 @@ class MainActivity : AppCompatActivity() {
 
                         runOnUiThread {
 
-                            button.isEnabled = true
+                            button.isEnabled =
+                                true
 
                             resultView.text =
                                 "❌ Ошибка соединения\n\n${e.message}"
@@ -448,12 +487,13 @@ class MainActivity : AppCompatActivity() {
 
                         runOnUiThread {
 
-                            button.isEnabled = true
+                            button.isEnabled =
+                                true
 
                             if (!response.isSuccessful) {
 
                                 resultView.text =
-                                    "❌ Сервер вернул ошибку ${response.code}\n\n$responseText"
+                                    "❌ Ошибка сервера ${response.code}\n\n$responseText"
 
                                 return@runOnUiThread
                             }
@@ -461,7 +501,9 @@ class MainActivity : AppCompatActivity() {
                             try {
 
                                 val jsonResponse =
-                                    JSONObject(responseText)
+                                    JSONObject(
+                                        responseText
+                                    )
 
                                 val answer =
                                     jsonResponse.optString(
@@ -513,12 +555,15 @@ class MainActivity : AppCompatActivity() {
 
         display.text = "0"
 
-        display.textColor = Color.WHITE
+        display.setTextColor(
+            Color.WHITE
+        )
 
         display.textSize = 30f
 
         display.gravity =
-            Gravity.CENTER_VERTICAL or Gravity.END
+            Gravity.CENTER_VERTICAL or
+                    Gravity.END
 
         display.setPadding(
             dp(16),
@@ -542,18 +587,20 @@ class MainActivity : AppCompatActivity() {
         )
 
         val grid =
-            android.widget.GridLayout(this)
+            android.widget.GridLayout(
+                this
+            )
 
         grid.columnCount = 4
 
-        grid.layoutParams =
+        rootContainer.addView(
+            grid,
             LinearLayout.LayoutParams(
                 -1,
                 0,
                 1f
             )
-
-        rootContainer.addView(grid)
+        )
 
         val buttons =
             listOf(
@@ -573,7 +620,9 @@ class MainActivity : AppCompatActivity() {
 
             button.textSize = 20f
 
-            button.setTextColor(Color.WHITE)
+            button.setTextColor(
+                Color.WHITE
+            )
 
             if (
                 value == "÷" ||
@@ -599,8 +648,7 @@ class MainActivity : AppCompatActivity() {
 
             params.width = 0
 
-            params.height =
-                dp(65)
+            params.height = dp(65)
 
             params.columnSpec =
                 android.widget.GridLayout.spec(
@@ -639,12 +687,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private var firstNumber = 0.0
-
-    private var operator = ""
-
-    private var waitingForSecond = false
-
     private fun calculatorButton(
         value: String,
         display: TextView
@@ -658,8 +700,6 @@ class MainActivity : AppCompatActivity() {
 
             operator = ""
 
-            waitingForSecond = false
-
             display.text = "0"
 
             return
@@ -667,7 +707,9 @@ class MainActivity : AppCompatActivity() {
 
         if (value == "⌫") {
 
-            if (calculatorExpression.isNotEmpty()) {
+            if (
+                calculatorExpression.isNotEmpty()
+            ) {
 
                 calculatorExpression =
                     calculatorExpression.dropLast(1)
@@ -675,8 +717,10 @@ class MainActivity : AppCompatActivity() {
                 display.text =
                     if (
                         calculatorExpression.isEmpty()
-                    ) "0"
-                    else calculatorExpression
+                    )
+                        "0"
+                    else
+                        calculatorExpression
             }
 
             return
@@ -695,17 +739,12 @@ class MainActivity : AppCompatActivity() {
 
                 firstNumber =
                     calculatorExpression
-                        .replace("−", "-")
-                        .replace("×", "*")
-                        .replace("÷", "/")
                         .toDoubleOrNull()
                         ?: 0.0
 
                 operator = value
 
                 calculatorExpression = ""
-
-                waitingForSecond = true
             }
 
             return
@@ -740,11 +779,14 @@ class MainActivity : AppCompatActivity() {
                             else
                                 firstNumber / second
 
-                        else -> second
+                        else ->
+                            second
                     }
 
                 val formatted =
-                    formatNumber(answer)
+                    formatNumber(
+                        answer
+                    )
 
                 display.text =
                     formatted
@@ -757,8 +799,6 @@ class MainActivity : AppCompatActivity() {
                     formatted
 
                 operator = ""
-
-                waitingForSecond = false
             }
 
             return
@@ -788,15 +828,16 @@ class MainActivity : AppCompatActivity() {
         if (value == ".") {
 
             if (
-                !calculatorExpression
-                    .contains(".")
+                !calculatorExpression.contains(".")
             ) {
 
                 calculatorExpression +=
                     if (
                         calculatorExpression.isEmpty()
-                    ) "0."
-                    else "."
+                    )
+                        "0."
+                    else
+                        "."
             }
 
         } else {
@@ -820,7 +861,7 @@ class MainActivity : AppCompatActivity() {
 
         addTitle(
             "📈 График функции",
-            "Введите математическую функцию"
+            "Введите функцию и постройте график"
         )
 
         val content =
@@ -838,7 +879,9 @@ class MainActivity : AppCompatActivity() {
                 "📈 Построить график"
             )
 
-        content.addView(graphButton)
+        content.addView(
+            graphButton
+        )
 
         graphView =
             GraphView(this)
@@ -868,7 +911,9 @@ class MainActivity : AppCompatActivity() {
         graphButton.setOnClickListener {
 
             val text =
-                input.text.toString().trim()
+                input.text
+                    .toString()
+                    .trim()
 
             if (text.isEmpty()) {
 
@@ -890,7 +935,7 @@ class MainActivity : AppCompatActivity() {
                     """
                     ❌ Не удалось распознать функцию.
 
-                    Примеры:
+                    Попробуйте:
 
                     y = x^2
                     y = x^2 - 4x + 3
@@ -915,7 +960,7 @@ class MainActivity : AppCompatActivity() {
             )
 
             info.text =
-                "✅ График построен\n\n$f"
+                "✅ График построен\n\nФункция: $text"
         }
     }
 
@@ -936,18 +981,20 @@ class MainActivity : AppCompatActivity() {
                 .replace("×", "*")
 
         if (text.startsWith("y=")) {
-            text = text.substring(2)
+            text =
+                text.substring(2)
         }
 
         if (text.startsWith("f(x)=")) {
-            text = text.substring(5)
+            text =
+                text.substring(5)
         }
 
         if (text.endsWith("=0")) {
-            text = text.dropLast(2)
+            text =
+                text.dropLast(2)
         }
 
-        // x^2
         if (
             text == "x^2" ||
             text == "x*x"
@@ -958,7 +1005,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // x
         if (text == "x") {
 
             return { x ->
@@ -966,7 +1012,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // -x
         if (text == "-x") {
 
             return { x ->
@@ -974,7 +1019,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ax^2 + bx + c
         val quadratic =
             Regex(
                 """^([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d*)x([+-]\d*\.?\d+)?$"""
@@ -998,16 +1042,18 @@ class MainActivity : AppCompatActivity() {
                 when (aText) {
                     "", "+" -> 1.0
                     "-" -> -1.0
-                    else -> aText.toDoubleOrNull()
-                        ?: return null
+                    else ->
+                        aText.toDoubleOrNull()
+                            ?: return null
                 }
 
             val b =
                 when (bText) {
                     "", "+" -> 1.0
                     "-" -> -1.0
-                    else -> bText.toDoubleOrNull()
-                        ?: return null
+                    else ->
+                        bText.toDoubleOrNull()
+                            ?: return null
                 }
 
             val c =
@@ -1018,13 +1064,13 @@ class MainActivity : AppCompatActivity() {
                         ?: return null
 
             return { x ->
+
                 a * x * x +
-                    b * x +
-                    c
+                        b * x +
+                        c
             }
         }
 
-        // ax + b
         val linear =
             Regex(
                 """^([+-]?\d*\.?\d*)x([+-]\d*\.?\d+)?$"""
@@ -1045,8 +1091,9 @@ class MainActivity : AppCompatActivity() {
                 when (aText) {
                     "", "+" -> 1.0
                     "-" -> -1.0
-                    else -> aText.toDoubleOrNull()
-                        ?: return null
+                    else ->
+                        aText.toDoubleOrNull()
+                            ?: return null
                 }
 
             val b =
@@ -1085,8 +1132,14 @@ class MainActivity : AppCompatActivity() {
 
                 val expression =
                     text
-                        .replace("x^2", "${x * x}")
-                        .replace("x", "($x)")
+                        .replace(
+                            "x^2",
+                            "${x * x}"
+                        )
+                        .replace(
+                            "x",
+                            "($x)"
+                        )
 
                 evaluateExpression(
                     expression
@@ -1103,18 +1156,8 @@ class MainActivity : AppCompatActivity() {
         expression: String
     ): Double {
 
-        var value =
-            expression
-
-        value =
-            value.replace(
-                "−",
-                "-"
-            )
-
-        // Простая обработка + и -
         val parts =
-            value.split(
+            expression.split(
                 Regex("(?=[+-])")
             )
 
@@ -1122,7 +1165,9 @@ class MainActivity : AppCompatActivity() {
 
         for (part in parts) {
 
-            if (part.isBlank()) continue
+            if (part.isBlank()) {
+                continue
+            }
 
             result +=
                 part.toDouble()
@@ -1163,7 +1208,8 @@ class MainActivity : AppCompatActivity() {
         val preview =
             ImageView(this)
 
-        preview.adjustViewBounds = true
+        preview.adjustViewBounds =
+            true
 
         preview.setPadding(
             dp(5),
@@ -1219,7 +1265,8 @@ class MainActivity : AppCompatActivity() {
         try {
 
             val inputStream =
-                contentResolver.openInputStream(uri)
+                contentResolver
+                    .openInputStream(uri)
                     ?: throw IOException(
                         "Не удалось открыть изображение"
                     )
@@ -1357,7 +1404,8 @@ class MainActivity : AppCompatActivity() {
         uri: Uri
     ): String {
 
-        var name = "photo.jpg"
+        var name =
+            "photo.jpg"
 
         val cursor =
             contentResolver.query(
@@ -1457,7 +1505,9 @@ class MainActivity : AppCompatActivity() {
             for (x in -5..5) {
 
                 val y =
-                    function(x.toDouble())
+                    function(
+                        x.toDouble()
+                    )
 
                 builder.append(
                     String.format(
@@ -1575,7 +1625,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ВСПОМОГАТЕЛЬНОЕ
     // =========================================================
 
     private fun formatNumber(
