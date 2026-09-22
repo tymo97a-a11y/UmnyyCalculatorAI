@@ -11,429 +11,316 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <!-- Заголовок -->
+        <!-- ЛОГОТИП / ЗАГОЛОВОК -->
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🧮"
+            android:textSize="42sp"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Умный калькулятор AI"
             android:textColor="#FFFFFF"
-            android:textSize="26sp"
+            android:textSize="28sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="16dp" />
+            android:layout_marginTop="4dp" />
 
-        <!-- Поле задачи -->
-
-        <EditText
-            android:id="@+id/input"
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minHeight="58dp"
-            android:background="#111A2B"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#8290A8"
-            android:hint="Например: 25% от 800 или x² - 4x + 3 = 0"
-            android:textSize="17sp"
-            android:padding="16dp"
-            android:inputType="textMultiLine"
-            android:maxLines="4" />
+            android:text="Все математические инструменты в одном приложении"
+            android:textColor="#91A0B8"
+            android:textSize="15sp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="24dp" />
 
         <!-- AI -->
 
-        <Button
-            android:id="@+id/calculateButton"
-            android:layout_width="match_parent"
-            android:layout_height="58dp"
-            android:layout_marginTop="12dp"
-            android:text="🤖  Рассчитать с AI"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:background="@drawable/button_operator" />
-
-        <!-- Фото -->
-
-        <Button
-            android:id="@+id/photoButton"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="10dp"
-            android:text="📷  Рассчитать по фото"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:background="@drawable/button_number" />
-
-        <!-- Предпросмотр фотографии -->
-
-        <ImageView
-            android:id="@+id/photoPreview"
-            android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:layout_marginTop="10dp"
-            android:background="#18243A"
-            android:padding="8dp"
-            android:scaleType="centerInside"
-            android:contentDescription="Выбранная фотография"
-            android:visibility="gone" />
-
-        <!-- Очистить фото -->
-
-        <Button
-            android:id="@+id/clearPhotoButton"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="8dp"
-            android:text="🗑  Очистить фото"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
-            android:background="@drawable/button_number" />
-
-        <!-- Статус фото -->
-
-        <TextView
-            android:id="@+id/photoStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text=""
-            android:textColor="#55E6A5"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:visibility="gone" />
-
-        <!-- Результат -->
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Результат"
-            android:textColor="#FFFFFF"
-            android:textSize="21sp"
-            android:textStyle="bold" />
-
         <LinearLayout
+            android:id="@+id/menuAI"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="vertical"
-            android:background="#111A2B"
-            android:padding="18dp">
+            android:layout_height="100dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="18dp"
+            android:background="@drawable/button_operator"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:id="@+id/result"
-                android:layout_width="match_parent"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:gravity="center"
+                android:text="🤖"
+                android:textSize="36sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Здесь появится результат"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Рассчитать с AI"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Задачи • объяснения • решения"
+                    android:textColor="#DCE7FF"
+                    android:textSize="13sp"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
                 android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:lineSpacingExtra="5dp" />
+                android:textSize="32sp" />
 
         </LinearLayout>
 
-        <!-- Пошаговое решение -->
+        <!-- ДВЕ КАРТОЧКИ -->
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="vertical"
-            android:background="#0E1728"
-            android:padding="18dp">
+            android:orientation="horizontal"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:id="@+id/menuCalculator"
+                android:layout_width="0dp"
+                android:layout_height="145dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp"
+                android:background="@drawable/button_number"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🧮"
+                    android:textSize="38sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Калькулятор"
+                    android:textColor="#FFFFFF"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Обычные расчёты"
+                    android:textColor="#91A0B8"
+                    android:textSize="12sp"
+                    android:layout_marginTop="3dp" />
+
+            </LinearLayout>
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <LinearLayout
+                android:id="@+id/menuGraph"
+                android:layout_width="0dp"
+                android:layout_height="145dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp"
+                android:background="@drawable/button_number"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📈"
+                    android:textSize="38sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="График функции"
+                    android:textColor="#FFFFFF"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Построение графиков"
+                    android:textColor="#91A0B8"
+                    android:textSize="12sp"
+                    android:layout_marginTop="3dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ЕЩЁ ДВЕ КАРТОЧКИ -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:id="@+id/menuPhoto"
+                android:layout_width="0dp"
+                android:layout_height="145dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp"
+                android:background="@drawable/button_number"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📷"
+                    android:textSize="38sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Решить по фото"
+                    android:textColor="#FFFFFF"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Фото задачи"
+                    android:textColor="#91A0B8"
+                    android:textSize="12sp"
+                    android:layout_marginTop="3dp" />
+
+            </LinearLayout>
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <LinearLayout
+                android:id="@+id/menuTable"
+                android:layout_width="0dp"
+                android:layout_height="145dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp"
+                android:background="@drawable/button_number"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📊"
+                    android:textSize="38sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Таблица"
+                    android:textColor="#FFFFFF"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Значения функции"
+                    android:textColor="#91A0B8"
+                    android:textSize="12sp"
+                    android:layout_marginTop="3dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ИСТОРИЯ -->
+
+        <LinearLayout
+            android:id="@+id/menuHistory"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/button_number"
+            android:layout_marginTop="14dp"
+            android:clickable="true"
+            android:focusable="true">
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:gravity="center"
+                android:text="📚"
+                android:textSize="30sp" />
+
+            <TextView
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="📚  Пошаговое решение"
+                android:layout_weight="1"
+                android:text="История решений"
                 android:textColor="#FFFFFF"
-                android:textSize="19sp"
+                android:textSize="17sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/calculatorDisplay"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="Введите задачу выше, и AI покажет решение."
-                android:textColor="#B8C5D9"
-                android:textSize="16sp"
-                android:lineSpacingExtra="5dp" />
+                android:text="›"
+                android:textColor="#91A0B8"
+                android:textSize="30sp" />
 
         </LinearLayout>
 
-        <!-- График -->
-
-        <TextView
-            android:id="@+id/graphTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="📈  График функции"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <com.smartcalculator.ai.GraphView
-            android:id="@+id/graphView"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="10dp"
-            android:background="#0E1728" />
-
-        <TextView
-            android:id="@+id/graphInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="#111A2B"
-            android:padding="14dp"
-            android:text="Введите функцию, чтобы построить график."
-            android:textColor="#B8C5D9"
-            android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/graphButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="10dp"
-            android:text="📈  Построить график"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:background="@drawable/button_operator" />
-
-        <Button
-            android:id="@+id/tableButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="8dp"
-            android:text="📊  Таблица значений"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:background="@drawable/button_number" />
-
-        <!-- Обычный калькулятор -->
+        <!-- НИЖНЯЯ ИНФОРМАЦИЯ -->
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="Калькулятор"
-            android:textColor="#FFFFFF"
-            android:textSize="21sp"
-            android:textStyle="bold" />
-
-        <GridLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:columnCount="4"
-            android:rowCount="5">
-
-            <Button
-                android:id="@+id/buttonClear"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="C"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_operator" />
-
-            <Button
-                android:id="@+id/buttonDivide"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="÷"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_operator" />
-
-            <Button
-                android:id="@+id/buttonMultiply"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="×"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_operator" />
-
-            <Button
-                android:id="@+id/buttonMinus"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="−"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_operator" />
-
-            <Button
-                android:id="@+id/button7"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="7"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/button8"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="8"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/button9"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="9"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/buttonPlus"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="+"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_operator" />
-
-            <Button
-                android:id="@+id/button4"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="4"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/button5"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="5"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/button6"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="6"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/buttonEquals"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="="
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_operator" />
-
-            <Button
-                android:id="@+id/button1"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="1"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/button2"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="2"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/button3"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="3"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1" />
-
-            <Button
-                android:id="@+id/button0"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnSpan="2"
-                android:layout_columnWeight="2"
-                android:text="0"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-            <Button
-                android:id="@+id/buttonDot"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_columnWeight="1"
-                android:text="."
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:background="@drawable/button_number" />
-
-        </GridLayout>
-
-        <!-- История -->
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="История"
-            android:textColor="#FFFFFF"
-            android:textSize="21sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/history"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="#111A2B"
-            android:padding="16dp"
-            android:text="История пока пуста"
-            android:textColor="#B8C5D9"
-            android:textSize="15sp"
-            android:lineSpacingExtra="5dp" />
+            android:text="💡 Математика • AI • графики • фото • пошаговые решения"
+            android:textColor="#61718B"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="12dp" />
 
     </LinearLayout>
 
