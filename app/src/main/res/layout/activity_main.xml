@@ -14,448 +14,398 @@
         android:padding="16dp">
 
         <!-- Заголовок -->
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Умный калькулятор AI"
             android:textColor="#FFFFFF"
-            android:textSize="27sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:paddingTop="10dp" />
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp" />
 
+        <!-- Поле задачи -->
+        <EditText
+            android:id="@+id/input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="58dp"
+            android:background="#111A2B"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#8290A8"
+            android:hint="Например: 25% от 800 или x² - 4x + 3 = 0"
+            android:textSize="17sp"
+            android:padding="16dp"
+            android:inputType="textMultiLine"
+            android:maxLines="4" />
+
+        <!-- AI -->
+        <Button
+            android:id="@+id/calculateButton"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="12dp"
+            android:text="🤖  Рассчитать с AI"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:background="@drawable/button_operator" />
+
+        <!-- Фото -->
+        <Button
+            android:id="@+id/photoButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="10dp"
+            android:text="📷  Рассчитать по фото"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:background="@drawable/button_number" />
+
+        <!-- Предпросмотр фотографии -->
+        <ImageView
+            android:id="@+id/photoPreview"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:layout_marginTop="10dp"
+            android:background="#18243A"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            android:contentDescription="Выбранная фотография"
+            android:visibility="gone" />
+
+        <!-- Очистить фото -->
+        <Button
+            android:id="@+id/clearPhotoButton"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:text="🗑  Очистить фото"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:background="@drawable/button_number" />
+
+        <!-- Статус фото -->
+        <TextView
+            android:id="@+id/photoStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text=""
+            android:textColor="#55E6A5"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:visibility="gone" />
+
+        <!-- Заголовок результата -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Расчёты • объяснения • AI"
-            android:textColor="#8D99AE"
-            android:textSize="14sp"
-            android:gravity="center"
-            android:paddingTop="4dp"
-            android:paddingBottom="22dp" />
+            android:layout_marginTop="20dp"
+            android:text="Результат"
+            android:textColor="#FFFFFF"
+            android:textSize="21sp"
+            android:textStyle="bold" />
 
-
-        <!-- Блок AI -->
-
+        <!-- Карточка результата -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:orientation="vertical"
             android:background="#111A2B"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="🤖  AI-помощник"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Опиши задачу обычными словами или используй фото"
-                android:textColor="#8D99AE"
-                android:textSize="14sp"
-                android:paddingTop="4dp"
-                android:paddingBottom="12dp" />
-
-
-            <!-- Поле задачи -->
-
-            <EditText
-                android:id="@+id/input"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minHeight="58dp"
-                android:background="#18243A"
-                android:hint="Например: 15% от 8400"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#65738A"
-                android:textSize="16sp"
-                android:padding="16dp"
-                android:inputType="textMultiLine"
-                android:maxLines="4" />
-
-
-            <!-- Кнопка обычного AI -->
-
-            <Button
-                android:id="@+id/calculateButton"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="Рассчитать с AI"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_operator"
-                android:layout_marginTop="12dp" />
-
-
-            <!-- Кнопка выбора фотографии -->
-
-            <Button
-                android:id="@+id/photoButton"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="📷  Рассчитать по фото"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_marginTop="10dp" />
-
-
-            <!-- ПРЕВЬЮ ФОТО -->
-
-            <ImageView
-                android:id="@+id/photoPreview"
-                android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:layout_marginTop="10dp"
-                android:background="#18243A"
-                android:padding="8dp"
-                android:scaleType="centerInside"
-                android:contentDescription="Выбранная фотография"
-                android:visibility="gone" />
-
-
-            <!-- Кнопка очистки фотографии -->
-
-            <Button
-                android:id="@+id/clearPhotoButton"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:text="🗑  Очистить фото"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_marginTop="8dp" />
-
-
-            <!-- Статус фотографии -->
-
-            <TextView
-                android:id="@+id/photoStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="#8D99AE"
-                android:textSize="14sp"
-                android:paddingTop="8dp"
-                android:visibility="gone" />
-
-
-            <!-- Результат AI -->
+            android:padding="18dp">
 
             <TextView
                 android:id="@+id/result"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="90dp"
-                android:background="#18243A"
-                android:text="Ответ AI появится здесь"
+                android:text="Здесь появится результат"
                 android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:padding="16dp"
-                android:gravity="center_vertical"
-                android:layout_marginTop="12dp" />
+                android:textSize="18sp"
+                android:lineSpacingExtra="5dp" />
 
         </LinearLayout>
 
-
-        <!-- Дисплей обычного калькулятора -->
-
-        <TextView
-            android:id="@+id/calculatorDisplay"
+        <!-- Красивый блок решения -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:layout_marginTop="18dp"
-            android:background="#111A2B"
-            android:gravity="center_vertical|end"
-            android:padding="16dp"
-            android:text="0"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:background="#0E1728"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📚  Пошаговое решение"
+                android:textColor="#FFFFFF"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/calculatorDisplay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Введите задачу выше, и AI покажет решение."
+                android:textColor="#B8C5D9"
+                android:textSize="16sp"
+                android:lineSpacingExtra="5dp" />
+
+        </LinearLayout>
+
+        <!-- Будущие функции -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/graphButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="📈  График"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:background="@drawable/button_operator" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:id="@+id/tableButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="📊  Таблица"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:background="@drawable/button_number" />
+
+        </LinearLayout>
+
+        <!-- Обычный калькулятор -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="Калькулятор"
             android:textColor="#FFFFFF"
-            android:textSize="30sp"
+            android:textSize="21sp"
             android:textStyle="bold" />
-
-
-        <!-- Кнопки калькулятора -->
 
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:columnCount="4"
-            android:rowCount="5"
-            android:layout_marginTop="12dp">
-
-
-            <!-- Первый ряд -->
+            android:rowCount="5">
 
             <Button
                 android:id="@+id/buttonClear"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="C"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_operator"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_operator" />
 
             <Button
                 android:id="@+id/buttonDivide"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="÷"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_operator"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_operator" />
 
             <Button
                 android:id="@+id/buttonMultiply"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="×"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_operator"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_operator" />
 
             <Button
                 android:id="@+id/buttonMinus"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="−"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_operator"
-                android:layout_margin="4dp" />
-
-
-            <!-- Второй ряд -->
+                android:background="@drawable/button_operator" />
 
             <Button
                 android:id="@+id/button7"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="7"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/button8"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="8"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/button9"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="9"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/buttonPlus"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="+"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_operator"
-                android:layout_margin="4dp" />
-
-
-            <!-- Третий ряд -->
+                android:background="@drawable/button_operator" />
 
             <Button
                 android:id="@+id/button4"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="4"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/button5"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="5"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/button6"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="6"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/buttonEquals"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="="
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:textAllCaps="false"
-                android:background="@drawable/button_operator"
-                android:layout_margin="4dp" />
-
-
-            <!-- Четвёртый ряд -->
+                android:background="@drawable/button_operator" />
 
             <Button
                 android:id="@+id/button1"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="1"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/button2"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="2"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/button3"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="3"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Space
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1" />
-
-
-            <!-- Пятый ряд -->
 
             <Button
                 android:id="@+id/button0"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnSpan="2"
                 android:layout_columnWeight="2"
                 android:text="0"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
+                android:background="@drawable/button_number" />
 
             <Button
                 android:id="@+id/buttonDot"
                 android:layout_width="0dp"
-                android:layout_height="68dp"
+                android:layout_height="64dp"
                 android:layout_columnWeight="1"
                 android:text="."
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:textAllCaps="false"
-                android:background="@drawable/button_number"
-                android:layout_margin="4dp" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="68dp"
-                android:layout_columnWeight="1" />
+                android:background="@drawable/button_number" />
 
         </GridLayout>
 
-
         <!-- История -->
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
             android:text="История"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginTop="22dp"
-            android:paddingBottom="8dp" />
+            android:textSize="21sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/history"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="70dp"
+            android:layout_marginTop="10dp"
             android:background="#111A2B"
-            android:text="История расчётов появится здесь"
-            android:textColor="#8D99AE"
-            android:textSize="14sp"
-            android:padding="16dp" />
+            android:padding="16dp"
+            android:text="История пока пуста"
+            android:textColor="#B8C5D9"
+            android:textSize="15sp"
+            android:lineSpacingExtra="5dp" />
 
     </LinearLayout>
 
