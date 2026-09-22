@@ -33,31 +33,78 @@ import kotlin.math.pow
 
 class MainActivity : AppCompatActivity() {
 
+    // =========================================================
+    // СЕРВЕР
+    // =========================================================
+
     private val serverUrl =
         "https://umnyy-calculator-ai-server.onrender.com"
 
-    private val client = OkHttpClient()
-
-    private val historyList = mutableListOf<String>()
-
-    private val bgColor = Color.rgb(7, 11, 20)
-    private val cardColor = Color.rgb(17, 26, 43)
-    private val blueColor = Color.rgb(36, 107, 253)
-    private val textColor = Color.WHITE
-    private val secondaryColor = Color.rgb(180, 195, 215)
+    private val client =
+        OkHttpClient()
 
     // =========================================================
-    // СОХРАНЯЕМ ТЕКУЩИЙ РЕЗУЛЬТАТ AI
+    // ИСТОРИЯ
+    // =========================================================
+
+    private val historyList =
+        mutableListOf<String>()
+
+    // =========================================================
+    // ТЕКУЩИЙ РЕЗУЛЬТАТ
     // =========================================================
 
     private var currentTask = ""
+
     private var currentAnswer = ""
+
     private var currentExplanation = ""
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    // =========================================================
+    // ЦВЕТА
+    // =========================================================
+
+    private val bgColor =
+        Color.rgb(7, 11, 20)
+
+    private val cardColor =
+        Color.rgb(17, 26, 43)
+
+    private val blueColor =
+        Color.rgb(36, 107, 253)
+
+    private val textColor =
+        Color.WHITE
+
+    private val secondaryColor =
+        Color.rgb(180, 195, 215)
+
+    // =========================================================
+    // DP
+    // =========================================================
+
+    private fun dp(value: Int): Int {
+
+        return (
+            value *
+                    resources.displayMetrics.density
+            ).toInt()
+    }
+
+    // =========================================================
+    // СОЗДАНИЕ
+    // =========================================================
+
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
+
+        super.onCreate(
+            savedInstanceState
+        )
 
         loadHistory()
+
         showMainMenu()
     }
 
@@ -67,59 +114,92 @@ class MainActivity : AppCompatActivity() {
 
     private fun showMainMenu() {
 
-        setContentView(R.layout.activity_main)
+        setContentView(
+            R.layout.activity_main
+        )
 
-        findViewById<View>(R.id.menuAI).setOnClickListener {
+        findViewById<View>(
+            R.id.menuAI
+        ).setOnClickListener {
+
             openAIScreen()
         }
 
-        findViewById<View>(R.id.menuCalculator).setOnClickListener {
+        findViewById<View>(
+            R.id.menuCalculator
+        ).setOnClickListener {
+
             openCalculatorScreen()
         }
 
-        findViewById<View>(R.id.menuGraph).setOnClickListener {
+        findViewById<View>(
+            R.id.menuGraph
+        ).setOnClickListener {
+
             openGraphScreen()
         }
 
-        findViewById<View>(R.id.menuPhoto).setOnClickListener {
+        findViewById<View>(
+            R.id.menuPhoto
+        ).setOnClickListener {
+
             openPhotoScreen()
         }
 
-        findViewById<View>(R.id.menuTable).setOnClickListener {
+        findViewById<View>(
+            R.id.menuTable
+        ).setOnClickListener {
+
             openTableScreen()
         }
 
-        findViewById<View>(R.id.menuHistory).setOnClickListener {
+        findViewById<View>(
+            R.id.menuHistory
+        ).setOnClickListener {
+
             openHistoryScreen()
         }
     }
 
     // =========================================================
-    // ОБЩИЕ ЭЛЕМЕНТЫ
+    // ROOT
     // =========================================================
 
-    private fun createRoot(): LinearLayout {
+    private fun createRoot():
+            LinearLayout {
 
         return LinearLayout(this).apply {
 
-            orientation = LinearLayout.VERTICAL
+            orientation =
+                LinearLayout.VERTICAL
 
             setPadding(
-                20,
-                20,
-                20,
-                30
+                dp(20),
+                dp(20),
+                dp(20),
+                dp(30)
             )
 
-            setBackgroundColor(bgColor)
+            setBackgroundColor(
+                bgColor
+            )
         }
     }
 
-    private fun setScreen(view: View) {
+    // =========================================================
+    // ЭКРАН
+    // =========================================================
 
-        val scroll = ScrollView(this)
+    private fun setScreen(
+        view: View
+    ) {
 
-        scroll.setBackgroundColor(bgColor)
+        val scroll =
+            ScrollView(this)
+
+        scroll.setBackgroundColor(
+            bgColor
+        )
 
         scroll.addView(view)
 
@@ -127,7 +207,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // КНОПКА НАЗАД
+    // НАЗАД
     // =========================================================
 
     private fun addBackButton(
@@ -135,13 +215,32 @@ class MainActivity : AppCompatActivity() {
         onBack: (() -> Unit)? = null
     ) {
 
-        val button = Button(this)
+        val button =
+            Button(this)
 
-        button.text = "← Назад"
+        button.text =
+            "← Назад"
 
-        button.setTextColor(textColor)
+        button.setTextColor(
+            textColor
+        )
 
-        button.setBackgroundColor(Color.TRANSPARENT)
+        button.setBackgroundColor(
+            Color.TRANSPARENT
+        )
+
+        button.textSize =
+            16f
+
+        button.minHeight =
+            dp(50)
+
+        button.setPadding(
+            dp(10),
+            dp(5),
+            dp(10),
+            dp(5)
+        )
 
         button.setOnClickListener {
 
@@ -159,40 +258,58 @@ class MainActivity : AppCompatActivity() {
             button,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                60
+                dp(60)
             )
         )
     }
 
     // =========================================================
-    // КНОПКА СБРОСА
+    // СБРОС
     // =========================================================
 
     private fun addResetButton(
         container: LinearLayout
     ) {
 
-        val button = Button(this)
+        val button =
+            Button(this)
 
-        button.text = "🗑 Сбросить"
+        button.text =
+            "🗑 Сбросить"
 
-        button.setTextColor(Color.WHITE)
+        button.setTextColor(
+            Color.WHITE
+        )
 
         button.setBackgroundColor(
-            Color.rgb(170, 45, 55)
+            Color.rgb(
+                170,
+                45,
+                55
+            )
+        )
+
+        button.textSize =
+            16f
+
+        button.setPadding(
+            dp(10),
+            dp(5),
+            dp(10),
+            dp(5)
         )
 
         val params =
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                70
+                dp(65)
             )
 
         params.setMargins(
             0,
-            10,
+            dp(10),
             0,
-            20
+            dp(15)
         )
 
         container.addView(
@@ -203,7 +320,9 @@ class MainActivity : AppCompatActivity() {
         button.setOnClickListener {
 
             currentTask = ""
+
             currentAnswer = ""
+
             currentExplanation = ""
 
             showMainMenu()
@@ -211,7 +330,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ЗАГОЛОВКИ
+    // ЗАГОЛОВОК
     // =========================================================
 
     private fun makeTitle(
@@ -220,22 +339,31 @@ class MainActivity : AppCompatActivity() {
 
         return TextView(this).apply {
 
-            this.text = text
+            this.text =
+                text
 
-            setTextColor(textColor)
+            setTextColor(
+                textColor
+            )
 
-            textSize = 24f
+            textSize =
+                24f
 
-            gravity = Gravity.CENTER
+            gravity =
+                Gravity.CENTER
 
             setPadding(
-                10,
-                20,
-                10,
-                20
+                dp(10),
+                dp(20),
+                dp(10),
+                dp(20)
             )
         }
     }
+
+    // =========================================================
+    // ЗАГОЛОВОК КАРТОЧКИ
+    // =========================================================
 
     private fun makeCardTitle(
         text: String
@@ -243,20 +371,28 @@ class MainActivity : AppCompatActivity() {
 
         return TextView(this).apply {
 
-            this.text = text
+            this.text =
+                text
 
-            setTextColor(textColor)
+            setTextColor(
+                textColor
+            )
 
-            textSize = 20f
+            textSize =
+                20f
 
             setPadding(
-                20,
-                20,
-                20,
-                10
+                dp(20),
+                dp(20),
+                dp(20),
+                dp(10)
             )
         }
     }
+
+    // =========================================================
+    // ТЕКСТ КАРТОЧКИ
+    // =========================================================
 
     private fun makeCardText(
         text: String
@@ -264,34 +400,46 @@ class MainActivity : AppCompatActivity() {
 
         return TextView(this).apply {
 
-            this.text = text
+            this.text =
+                text
 
-            setTextColor(secondaryColor)
+            setTextColor(
+                secondaryColor
+            )
 
-            textSize = 16f
+            textSize =
+                16f
 
             setPadding(
-                20,
-                5,
-                20,
-                20
+                dp(20),
+                dp(5),
+                dp(20),
+                dp(20)
             )
         }
     }
 
-    private fun makeCard(): LinearLayout {
+    // =========================================================
+    // КАРТОЧКА
+    // =========================================================
+
+    private fun makeCard():
+            LinearLayout {
 
         return LinearLayout(this).apply {
 
-            orientation = LinearLayout.VERTICAL
+            orientation =
+                LinearLayout.VERTICAL
 
-            setBackgroundColor(cardColor)
+            setBackgroundColor(
+                cardColor
+            )
 
             setPadding(
-                5,
-                5,
-                5,
-                5
+                dp(5),
+                dp(5),
+                dp(5),
+                dp(5)
             )
 
             val params =
@@ -302,12 +450,13 @@ class MainActivity : AppCompatActivity() {
 
             params.setMargins(
                 0,
-                10,
+                dp(10),
                 0,
-                10
+                dp(10)
             )
 
-            layoutParams = params
+            layoutParams =
+                params
         }
     }
 
@@ -317,12 +466,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun openAIScreen() {
 
-        val root = createRoot()
+        val root =
+            createRoot()
 
         addBackButton(root)
 
         root.addView(
-            makeTitle("🤖 Рассчитать с AI")
+            makeTitle(
+                "🤖 Рассчитать с AI"
+            )
         )
 
         root.addView(
@@ -331,46 +483,75 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val input = EditText(this)
+        val input =
+            EditText(this)
 
         input.hint =
             "Например: 15% от 8400"
 
-        input.setTextColor(textColor)
+        input.setTextColor(
+            textColor
+        )
 
-        input.setHintTextColor(Color.GRAY)
+        input.setHintTextColor(
+            Color.GRAY
+        )
 
-        input.setBackgroundColor(cardColor)
+        input.setBackgroundColor(
+            cardColor
+        )
+
+        input.textSize =
+            18f
 
         input.setPadding(
-            20,
-            20,
-            20,
-            20
+            dp(20),
+            dp(20),
+            dp(20),
+            dp(20)
         )
 
         root.addView(
             input,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                150
+                dp(150)
             )
         )
 
-        val button = Button(this)
+        // =====================================================
+        // РАССЧИТАТЬ
+        // =====================================================
+
+        val button =
+            Button(this)
 
         button.text =
             "🤖 Рассчитать с AI"
 
-        button.setTextColor(Color.WHITE)
+        button.setTextColor(
+            Color.WHITE
+        )
 
-        button.setBackgroundColor(blueColor)
+        button.setBackgroundColor(
+            blueColor
+        )
+
+        button.textSize =
+            17f
+
+        button.setPadding(
+            dp(10),
+            dp(5),
+            dp(10),
+            dp(5)
+        )
 
         root.addView(
             button,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                70
+                dp(70)
             )
         )
 
@@ -378,22 +559,32 @@ class MainActivity : AppCompatActivity() {
         // ОЧИСТИТЬ
         // =====================================================
 
-        val clearButton = Button(this)
+        val clearButton =
+            Button(this)
 
         clearButton.text =
             "🗑 Очистить"
 
-        clearButton.setTextColor(Color.WHITE)
+        clearButton.setTextColor(
+            Color.WHITE
+        )
 
         clearButton.setBackgroundColor(
-            Color.rgb(80, 90, 110)
+            Color.rgb(
+                80,
+                90,
+                110
+            )
         )
+
+        clearButton.textSize =
+            16f
 
         root.addView(
             clearButton,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                65
+                dp(65)
             )
         )
 
@@ -407,7 +598,9 @@ class MainActivity : AppCompatActivity() {
         button.setOnClickListener {
 
             val text =
-                input.text.toString().trim()
+                input.text
+                    .toString()
+                    .trim()
 
             if (text.isEmpty()) {
 
@@ -449,9 +642,11 @@ class MainActivity : AppCompatActivity() {
         )
 
         val body =
-            json.toString().toRequestBody(
-                "application/json".toMediaType()
-            )
+            json.toString()
+                .toRequestBody(
+                    "application/json"
+                        .toMediaType()
+                )
 
         val request =
             Request.Builder()
@@ -461,7 +656,9 @@ class MainActivity : AppCompatActivity() {
                 .post(body)
                 .build()
 
-        client.newCall(request).enqueue(
+        client.newCall(
+            request
+        ).enqueue(
             object : Callback {
 
                 override fun onFailure(
@@ -485,10 +682,13 @@ class MainActivity : AppCompatActivity() {
                 ) {
 
                     val responseText =
-                        response.body?.string()
+                        response.body
+                            ?.string()
                             ?: ""
 
-                    if (!response.isSuccessful) {
+                    if (
+                        !response.isSuccessful
+                    ) {
 
                         runOnUiThread {
 
@@ -528,9 +728,14 @@ class MainActivity : AppCompatActivity() {
 
                         runOnUiThread {
 
-                            currentTask = text
-                            currentAnswer = answer
-                            currentExplanation = explanation
+                            currentTask =
+                                text
+
+                            currentAnswer =
+                                answer
+
+                            currentExplanation =
+                                explanation
 
                             openAIResultScreen(
                                 text,
@@ -556,7 +761,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ЭКРАН РЕЗУЛЬТАТА AI
+    // РЕЗУЛЬТАТ AI
     // =========================================================
 
     private fun openAIResultScreen(
@@ -565,20 +770,31 @@ class MainActivity : AppCompatActivity() {
         explanation: String
     ) {
 
-        currentTask = task
-        currentAnswer = answer
-        currentExplanation = explanation
+        currentTask =
+            task
 
-        val root = createRoot()
+        currentAnswer =
+            answer
 
-        // Назад → AI
+        currentExplanation =
+            explanation
+
+        val root =
+            createRoot()
+
+        // =====================================================
+        // НАЗАД → AI
+        // =====================================================
+
         addBackButton(root) {
 
             openAIScreen()
         }
 
         root.addView(
-            makeTitle("🤖 Результат AI")
+            makeTitle(
+                "🤖 Результат AI"
+            )
         )
 
         // =====================================================
@@ -591,51 +807,68 @@ class MainActivity : AppCompatActivity() {
         // ЗАДАЧА
         // =====================================================
 
-        val taskCard = makeCard()
+        val taskCard =
+            makeCard()
 
         taskCard.addView(
-            makeCardTitle("📝 Задача")
+            makeCardTitle(
+                "📝 Задача"
+            )
         )
 
         taskCard.addView(
-            makeCardText(task)
+            makeCardText(
+                task
+            )
         )
 
-        root.addView(taskCard)
+        root.addView(
+            taskCard
+        )
 
         // =====================================================
         // ОТВЕТ
         // =====================================================
 
-        val answerCard = makeCard()
+        val answerCard =
+            makeCard()
 
         answerCard.addView(
-            makeCardTitle("✅ ОТВЕТ")
+            makeCardTitle(
+                "✅ ОТВЕТ"
+            )
         )
 
         val answerText =
             TextView(this)
 
-        answerText.text = answer
+        answerText.text =
+            answer
 
-        answerText.setTextColor(Color.WHITE)
+        answerText.setTextColor(
+            Color.WHITE
+        )
 
-        answerText.textSize = 28f
+        answerText.textSize =
+            28f
 
-        answerText.gravity = Gravity.CENTER
+        answerText.gravity =
+            Gravity.CENTER
 
         answerText.setPadding(
-            20,
-            20,
-            20,
-            30
+            dp(20),
+            dp(20),
+            dp(20),
+            dp(30)
         )
 
         answerCard.addView(
             answerText
         )
 
-        root.addView(answerCard)
+        root.addView(
+            answerCard
+        )
 
         // =====================================================
         // ПОШАГОВОЕ РЕШЕНИЕ
@@ -652,7 +885,9 @@ class MainActivity : AppCompatActivity() {
 
         explanationCard.addView(
             makeCardText(
-                if (explanation.isBlank()) {
+                if (
+                    explanation.isBlank()
+                ) {
                     "AI не предоставил дополнительное объяснение."
                 } else {
                     explanation
@@ -665,13 +900,15 @@ class MainActivity : AppCompatActivity() {
         )
 
         // =====================================================
-        // ГРАФИК И ТАБЛИЦА
+        // ПРОВЕРКА ФУНКЦИИ
         // =====================================================
 
         val function =
             parseFunction(task)
 
-        if (function != null) {
+        if (
+            function != null
+        ) {
 
             // =================================================
             // ГРАФИК
@@ -691,11 +928,14 @@ class MainActivity : AppCompatActivity() {
                 blueColor
             )
 
+            graphButton.textSize =
+                17f
+
             root.addView(
                 graphButton,
                 LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    70
+                    dp(70)
                 )
             )
 
@@ -724,17 +964,20 @@ class MainActivity : AppCompatActivity() {
                 blueColor
             )
 
+            tableButton.textSize =
+                17f
+
             val tableParams =
                 LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    70
+                    dp(70)
                 )
 
             tableParams.setMargins(
                 0,
-                10,
+                dp(10),
                 0,
-                10
+                dp(10)
             )
 
             root.addView(
@@ -793,17 +1036,20 @@ class MainActivity : AppCompatActivity() {
             blueColor
         )
 
+        newTaskButton.textSize =
+            17f
+
         val params =
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                75
+                dp(75)
             )
 
         params.setMargins(
             0,
-            20,
+            dp(20),
             0,
-            20
+            dp(20)
         )
 
         root.addView(
@@ -814,7 +1060,9 @@ class MainActivity : AppCompatActivity() {
         newTaskButton.setOnClickListener {
 
             currentTask = ""
+
             currentAnswer = ""
+
             currentExplanation = ""
 
             openAIScreen()
@@ -824,7 +1072,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ТАБЛИЦА
+    // СОЗДАНИЕ ТАБЛИЦЫ
     // =========================================================
 
     private fun createFunctionTable(
@@ -835,13 +1083,15 @@ class MainActivity : AppCompatActivity() {
             TableLayout(this)
 
         table.setPadding(
-            10,
-            10,
-            10,
-            20
+            dp(10),
+            dp(10),
+            dp(10),
+            dp(20)
         )
 
-        table.setStretchAllColumns(true)
+        table.setStretchAllColumns(
+            true
+        )
 
         addTableRow(
             table,
@@ -849,22 +1099,34 @@ class MainActivity : AppCompatActivity() {
             "y"
         )
 
-        for (i in -5..5) {
+        for (
+            i in -5..5
+        ) {
 
             val x =
                 i.toDouble()
 
             val y =
                 try {
+
                     function(x)
-                } catch (_: Exception) {
+
+                } catch (
+                    _: Exception
+                ) {
+
                     Double.NaN
                 }
 
             val yText =
-                if (y.isFinite()) {
+                if (
+                    y.isFinite()
+                ) {
+
                     formatNumber(y)
+
                 } else {
+
                     "—"
                 }
 
@@ -878,6 +1140,10 @@ class MainActivity : AppCompatActivity() {
         return table
     }
 
+    // =========================================================
+    // СТРОКА ТАБЛИЦЫ
+    // =========================================================
+
     private fun addTableRow(
         table: TableLayout,
         first: String,
@@ -890,43 +1156,47 @@ class MainActivity : AppCompatActivity() {
         val firstText =
             TextView(this)
 
-        firstText.text = first
+        firstText.text =
+            first
 
         firstText.setTextColor(
             Color.WHITE
         )
 
-        firstText.textSize = 17f
+        firstText.textSize =
+            17f
 
         firstText.gravity =
             Gravity.CENTER
 
         firstText.setPadding(
-            10,
-            15,
-            10,
-            15
+            dp(10),
+            dp(15),
+            dp(10),
+            dp(15)
         )
 
         val secondText =
             TextView(this)
 
-        secondText.text = second
+        secondText.text =
+            second
 
         secondText.setTextColor(
             Color.WHITE
         )
 
-        secondText.textSize = 17f
+        secondText.textSize =
+            17f
 
         secondText.gravity =
             Gravity.CENTER
 
         secondText.setPadding(
-            10,
-            15,
-            10,
-            15
+            dp(10),
+            dp(15),
+            dp(10),
+            dp(15)
         )
 
         row.addView(
@@ -937,14 +1207,23 @@ class MainActivity : AppCompatActivity() {
             secondText
         )
 
-        table.addView(row)
+        table.addView(
+            row
+        )
     }
+
+    // =========================================================
+    // ФОРМАТ ЧИСЛА
+    // =========================================================
 
     private fun formatNumber(
         number: Double
     ): String {
 
-        if (!number.isFinite()) {
+        if (
+            !number.isFinite()
+        ) {
+
             return "—"
         }
 
@@ -952,7 +1231,9 @@ class MainActivity : AppCompatActivity() {
             number % 1.0 == 0.0
         ) {
 
-            number.toLong().toString()
+            number
+                .toLong()
+                .toString()
 
         } else {
 
@@ -984,23 +1265,25 @@ class MainActivity : AppCompatActivity() {
         val display =
             TextView(this)
 
-        display.text = "0"
+        display.text =
+            "0"
 
         display.setTextColor(
             Color.WHITE
         )
 
-        display.textSize = 32f
+        display.textSize =
+            32f
 
         display.gravity =
             Gravity.RIGHT or
                     Gravity.CENTER_VERTICAL
 
         display.setPadding(
-            20,
-            20,
-            20,
-            20
+            dp(20),
+            dp(20),
+            dp(20),
+            dp(20)
         )
 
         display.setBackgroundColor(
@@ -1011,51 +1294,67 @@ class MainActivity : AppCompatActivity() {
             display,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                100
+                dp(100)
             )
         )
 
         val grid =
             GridLayout(this)
 
-        grid.columnCount = 4
+        grid.columnCount =
+            4
 
-        val buttons = arrayOf(
-            "AC",
-            "⌫",
-            "%",
-            "÷",
-            "(",
-            ")",
-            "×",
-            "−",
-            "7",
-            "8",
-            "9",
-            "+",
-            "4",
-            "5",
-            "6",
-            "=",
-            "1",
-            "2",
-            "3",
-            ".",
-            "0"
-        )
+        val buttons =
+            arrayOf(
+                "AC",
+                "⌫",
+                "%",
+                "÷",
+                "(",
+                ")",
+                "×",
+                "−",
+                "7",
+                "8",
+                "9",
+                "+",
+                "4",
+                "5",
+                "6",
+                "=",
+                "1",
+                "2",
+                "3",
+                ".",
+                "0"
+            )
 
-        for (text in buttons) {
+        for (
+            text in buttons
+        ) {
 
             val button =
                 Button(this)
 
-            button.text = text
+            button.text =
+                text
 
             button.setTextColor(
                 Color.WHITE
             )
 
-            button.textSize = 20f
+            button.textSize =
+                20f
+
+            button.minHeight =
+                0
+
+            button.setPadding(
+                dp(2),
+                dp(2),
+                dp(2),
+                dp(2)
+            )
 
             if (
                 text == "+" ||
@@ -1081,12 +1380,16 @@ class MainActivity : AppCompatActivity() {
             val params =
                 GridLayout.LayoutParams()
 
-            params.width = 0
+            params.width =
+                0
 
-            params.height = 85
+            params.height =
+                dp(85)
 
             params.columnSpec =
-                if (text == "0") {
+                if (
+                    text == "0"
+                ) {
 
                     GridLayout.spec(
                         GridLayout.UNDEFINED,
@@ -1104,10 +1407,10 @@ class MainActivity : AppCompatActivity() {
                 }
 
             params.setMargins(
-                5,
-                5,
-                5,
-                5
+                dp(5),
+                dp(5),
+                dp(5),
+                dp(5)
             )
 
             grid.addView(
@@ -1119,37 +1422,58 @@ class MainActivity : AppCompatActivity() {
 
                 when (text) {
 
+                    // =========================================
+                    // AC
+                    // =========================================
+
                     "AC" -> {
 
                         display.text =
                             "0"
                     }
 
+                    // =========================================
+                    // BACKSPACE
+                    // =========================================
+
                     "⌫" -> {
 
                         val value =
-                            display.text.toString()
+                            display.text
+                                .toString()
 
                         display.text =
                             if (
                                 value.length <= 1
                             ) {
+
                                 "0"
+
                             } else {
+
                                 value.dropLast(1)
                             }
                     }
 
+                    // =========================================
+                    // =
+                    // =========================================
+
                     "=" -> {
 
                         val expression =
-                            display.text.toString()
+                            display.text
+                                .toString()
 
                         display.text =
                             calculateExpression(
                                 expression
                             )
                     }
+
+                    // =========================================
+                    // ОСТАЛЬНЫЕ
+                    // =========================================
 
                     else -> {
 
@@ -1162,14 +1486,66 @@ class MainActivity : AppCompatActivity() {
 
                         } else {
 
-                            display.append(text)
+                            display.append(
+                                text
+                            )
                         }
                     }
                 }
             }
         }
 
-        root.addView(grid)
+        root.addView(
+            grid
+        )
+
+        // =====================================================
+        // СБРОС К ГЛАВНОМУ МЕНЮ
+        // =====================================================
+
+        val resetButton =
+            Button(this)
+
+        resetButton.text =
+            "🗑 Сбросить калькулятор"
+
+        resetButton.setTextColor(
+            Color.WHITE
+        )
+
+        resetButton.setBackgroundColor(
+            Color.rgb(
+                170,
+                45,
+                55
+            )
+        )
+
+        resetButton.textSize =
+            16f
+
+        val resetParams =
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(70)
+            )
+
+        resetParams.setMargins(
+            0,
+            dp(15),
+            0,
+            dp(10)
+        )
+
+        root.addView(
+            resetButton,
+            resetParams
+        )
+
+        resetButton.setOnClickListener {
+
+            showMainMenu()
+        }
 
         setScreen(root)
     }
@@ -1186,19 +1562,34 @@ class MainActivity : AppCompatActivity() {
 
             val clean =
                 expression
-                    .replace("×", "*")
-                    .replace("÷", "/")
-                    .replace("−", "-")
+                    .replace(
+                        "×",
+                        "*"
+                    )
+                    .replace(
+                        "÷",
+                        "/"
+                    )
+                    .replace(
+                        "−",
+                        "-"
+                    )
 
             evaluateSimpleExpression(
                 clean
             )
 
-        } catch (_: Exception) {
+        } catch (
+            _: Exception
+        ) {
 
             "Ошибка"
         }
     }
+
+    // =========================================================
+    // ПРОСТОЕ ВЫЧИСЛЕНИЕ
+    // =========================================================
 
     private fun evaluateSimpleExpression(
         expression: String
@@ -1207,9 +1598,12 @@ class MainActivity : AppCompatActivity() {
         val tokens =
             mutableListOf<String>()
 
-        var current = ""
+        var current =
+            ""
 
-        for (char in expression) {
+        for (
+            char in expression
+        ) {
 
             if (
                 char.isDigit() ||
@@ -1220,11 +1614,16 @@ class MainActivity : AppCompatActivity() {
 
             } else {
 
-                if (current.isNotEmpty()) {
+                if (
+                    current.isNotEmpty()
+                ) {
 
-                    tokens.add(current)
+                    tokens.add(
+                        current
+                    )
 
-                    current = ""
+                    current =
+                        ""
                 }
 
                 tokens.add(
@@ -1233,17 +1632,28 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (current.isNotEmpty()) {
+        if (
+            current.isNotEmpty()
+        ) {
 
-            tokens.add(current)
+            tokens.add(
+                current
+            )
         }
 
-        if (tokens.isEmpty()) {
+        if (
+            tokens.isEmpty()
+        ) {
 
             return "0"
         }
 
-        var i = 1
+        // =====================================================
+        // УМНОЖЕНИЕ И ДЕЛЕНИЕ
+        // =====================================================
+
+        var i =
+            1
 
         while (
             i < tokens.size - 1
@@ -1265,10 +1675,23 @@ class MainActivity : AppCompatActivity() {
                     tokens[i + 1]
                         .toDouble()
 
+                if (
+                    op == "/" &&
+                    right == 0.0
+                ) {
+
+                    return "Ошибка"
+                }
+
                 val value =
-                    if (op == "*") {
+                    if (
+                        op == "*"
+                    ) {
+
                         left * right
+
                     } else {
+
                         left / right
                     }
 
@@ -1285,10 +1708,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        var result =
-            tokens[0].toDouble()
+        // =====================================================
+        // СЛОЖЕНИЕ И ВЫЧИТАНИЕ
+        // =====================================================
 
-        i = 1
+        var result =
+            tokens[0]
+                .toDouble()
+
+        i =
+            1
 
         while (
             i < tokens.size - 1
@@ -1298,23 +1727,30 @@ class MainActivity : AppCompatActivity() {
                 tokens[i]
 
             val number =
-                tokens[i + 1].toDouble()
+                tokens[i + 1]
+                    .toDouble()
 
             when (op) {
 
                 "+" -> {
-                    result += number
+
+                    result +=
+                        number
                 }
 
                 "-" -> {
-                    result -= number
+
+                    result -=
+                        number
                 }
             }
 
             i += 2
         }
 
-        return formatNumber(result)
+        return formatNumber(
+            result
+        )
     }
 
     // =========================================================
@@ -1327,6 +1763,10 @@ class MainActivity : AppCompatActivity() {
 
         val root =
             createRoot()
+
+        // =====================================================
+        // НАЗАД
+        // =====================================================
 
         addBackButton(root) {
 
@@ -1354,7 +1794,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         // =====================================================
-        // СБРОС
+        // СБРОС ГРАФИКА
         // =====================================================
 
         val resetButton =
@@ -1368,16 +1808,27 @@ class MainActivity : AppCompatActivity() {
         )
 
         resetButton.setBackgroundColor(
-            Color.rgb(170, 45, 55)
+            Color.rgb(
+                170,
+                45,
+                55
+            )
         )
+
+        resetButton.textSize =
+            16f
 
         root.addView(
             resetButton,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                65
+                dp(65)
             )
         )
+
+        // =====================================================
+        // ВВОД
+        // =====================================================
 
         val input =
             EditText(this)
@@ -1397,27 +1848,36 @@ class MainActivity : AppCompatActivity() {
             cardColor
         )
 
+        input.textSize =
+            17f
+
         input.setPadding(
-            20,
-            20,
-            20,
-            20
+            dp(20),
+            dp(20),
+            dp(20),
+            dp(20)
         )
 
         if (
             !prefill.isNullOrBlank()
         ) {
 
-            input.setText(prefill)
+            input.setText(
+                prefill
+            )
         }
 
         root.addView(
             input,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                130
+                dp(130)
             )
         )
+
+        // =====================================================
+        // КНОПКА
+        // =====================================================
 
         val button =
             Button(this)
@@ -1433,13 +1893,20 @@ class MainActivity : AppCompatActivity() {
             blueColor
         )
 
+        button.textSize =
+            17f
+
         root.addView(
             button,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                70
+                dp(70)
             )
         )
+
+        // =====================================================
+        // GRAPH VIEW
+        // =====================================================
 
         val graphView =
             GraphView(this)
@@ -1448,18 +1915,25 @@ class MainActivity : AppCompatActivity() {
             graphView,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                650
+                dp(650)
             )
         )
+
+        // =====================================================
+        // ПОСТРОИТЬ
+        // =====================================================
 
         button.setOnClickListener {
 
             val function =
                 parseFunction(
-                    input.text.toString()
+                    input.text
+                        .toString()
                 )
 
-            if (function == null) {
+            if (
+                function == null
+            ) {
 
                 Toast.makeText(
                     this,
@@ -1475,6 +1949,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // =====================================================
+        // СБРОС
+        // =====================================================
+
         resetButton.setOnClickListener {
 
             input.setText("")
@@ -1482,14 +1960,22 @@ class MainActivity : AppCompatActivity() {
             graphView.clearGraph()
         }
 
+        // =====================================================
+        // АВТОМАТИЧЕСКОЕ ПОСТРОЕНИЕ
+        // =====================================================
+
         if (
             !prefill.isNullOrBlank()
         ) {
 
             val function =
-                parseFunction(prefill)
+                parseFunction(
+                    prefill
+                )
 
-            if (function != null) {
+            if (
+                function != null
+            ) {
 
                 graphView.setFunction(
                     function
@@ -1512,28 +1998,56 @@ class MainActivity : AppCompatActivity() {
             original
                 .trim()
                 .lowercase()
-                .replace("²", "^2")
-                .replace("−", "-")
-                .replace("×", "*")
+                .replace(
+                    "²",
+                    "^2"
+                )
+                .replace(
+                    "−",
+                    "-"
+                )
+                .replace(
+                    "×",
+                    "*"
+                )
 
-        if (expression.isEmpty()) {
+        if (
+            expression.isEmpty()
+        ) {
+
             return null
         }
 
         expression =
             expression
-                .replace("y=", "")
-                .replace("y =", "")
-                .replace("f(x)=", "")
-                .replace("f(x) =", "")
+                .replace(
+                    "y=",
+                    ""
+                )
+                .replace(
+                    "y =",
+                    ""
+                )
+                .replace(
+                    "f(x)=",
+                    ""
+                )
+                .replace(
+                    "f(x) =",
+                    ""
+                )
                 .trim()
 
         if (
-            expression.endsWith("=0")
+            expression.endsWith(
+                "=0"
+            )
         ) {
 
             expression =
-                expression.dropLast(2)
+                expression.dropLast(
+                    2
+                )
         }
 
         expression =
@@ -1542,15 +2056,25 @@ class MainActivity : AppCompatActivity() {
                 ""
             )
 
+        // =====================================================
+        // x²
+        // =====================================================
+
         if (
             expression == "x^2" ||
             expression == "x**2"
         ) {
 
             return { x ->
+
                 x.pow(2)
             }
         }
+
+        // =====================================================
+        // КВАДРАТНАЯ ФУНКЦИЯ
+        // ax² + bx + c
+        // =====================================================
 
         val quadratic =
             Regex(
@@ -1606,8 +2130,11 @@ class MainActivity : AppCompatActivity() {
                 if (
                     cText.isBlank()
                 ) {
+
                     0.0
+
                 } else {
+
                     cText.toDouble()
                 }
 
@@ -1618,6 +2145,10 @@ class MainActivity : AppCompatActivity() {
                         c
             }
         }
+
+        // =====================================================
+        // ax² + c
+        // =====================================================
 
         val quadraticSimple =
             Regex(
@@ -1663,6 +2194,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // =====================================================
+        // ЛИНЕЙНАЯ ФУНКЦИЯ
+        // ax + b
+        // =====================================================
+
         val linear =
             Regex(
                 """([+-]?\d*\.?\d*)x([+-]\d*\.?\d+)?"""
@@ -1701,14 +2237,18 @@ class MainActivity : AppCompatActivity() {
                 if (
                     bText.isBlank()
                 ) {
+
                     0.0
+
                 } else {
+
                     bText.toDouble()
                 }
 
             return { x ->
 
-                a * x + b
+                a * x +
+                        b
             }
         }
 
@@ -1725,6 +2265,10 @@ class MainActivity : AppCompatActivity() {
 
         val root =
             createRoot()
+
+        // =====================================================
+        // НАЗАД
+        // =====================================================
 
         addBackButton(root) {
 
@@ -1751,6 +2295,10 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
+        // =====================================================
+        // СБРОС
+        // =====================================================
+
         val resetButton =
             Button(this)
 
@@ -1762,16 +2310,27 @@ class MainActivity : AppCompatActivity() {
         )
 
         resetButton.setBackgroundColor(
-            Color.rgb(170, 45, 55)
+            Color.rgb(
+                170,
+                45,
+                55
+            )
         )
+
+        resetButton.textSize =
+            16f
 
         root.addView(
             resetButton,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                65
+                dp(65)
             )
         )
+
+        // =====================================================
+        // INPUT
+        // =====================================================
 
         val input =
             EditText(this)
@@ -1791,27 +2350,36 @@ class MainActivity : AppCompatActivity() {
             cardColor
         )
 
+        input.textSize =
+            17f
+
         input.setPadding(
-            20,
-            20,
-            20,
-            20
+            dp(20),
+            dp(20),
+            dp(20),
+            dp(20)
         )
 
         if (
             !prefill.isNullOrBlank()
         ) {
 
-            input.setText(prefill)
+            input.setText(
+                prefill
+            )
         }
 
         root.addView(
             input,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                120
+                dp(120)
             )
         )
+
+        // =====================================================
+        // КНОПКА
+        // =====================================================
 
         val button =
             Button(this)
@@ -1827,13 +2395,20 @@ class MainActivity : AppCompatActivity() {
             blueColor
         )
 
+        button.textSize =
+            17f
+
         root.addView(
             button,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                70
+                dp(70)
             )
         )
+
+        // =====================================================
+        // КОНТЕЙНЕР
+        // =====================================================
 
         val tableContainer =
             LinearLayout(this)
@@ -1845,16 +2420,23 @@ class MainActivity : AppCompatActivity() {
             tableContainer
         )
 
+        // =====================================================
+        // СОЗДАТЬ
+        // =====================================================
+
         button.setOnClickListener {
 
             tableContainer.removeAllViews()
 
             val function =
                 parseFunction(
-                    input.text.toString()
+                    input.text
+                        .toString()
                 )
 
-            if (function == null) {
+            if (
+                function == null
+            ) {
 
                 Toast.makeText(
                     this,
@@ -1866,9 +2448,15 @@ class MainActivity : AppCompatActivity() {
             }
 
             tableContainer.addView(
-                createFunctionTable(function)
+                createFunctionTable(
+                    function
+                )
             )
         }
+
+        // =====================================================
+        // СБРОС
+        // =====================================================
 
         resetButton.setOnClickListener {
 
@@ -1877,17 +2465,27 @@ class MainActivity : AppCompatActivity() {
             tableContainer.removeAllViews()
         }
 
+        // =====================================================
+        // АВТОМАТИЧЕСКАЯ ТАБЛИЦА
+        // =====================================================
+
         if (
             !prefill.isNullOrBlank()
         ) {
 
             val function =
-                parseFunction(prefill)
+                parseFunction(
+                    prefill
+                )
 
-            if (function != null) {
+            if (
+                function != null
+            ) {
 
                 tableContainer.addView(
-                    createFunctionTable(function)
+                    createFunctionTable(
+                        function
+                    )
                 )
             }
         }
@@ -1918,6 +2516,10 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
+        // =====================================================
+        // ВЫБРАТЬ ФОТО
+        // =====================================================
+
         val button =
             Button(this)
 
@@ -1932,11 +2534,47 @@ class MainActivity : AppCompatActivity() {
             blueColor
         )
 
+        button.textSize =
+            17f
+
         root.addView(
             button,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                80
+                dp(80)
+            )
+        )
+
+        // =====================================================
+        // ОЧИСТИТЬ / СБРОСИТЬ
+        // =====================================================
+
+        val resetButton =
+            Button(this)
+
+        resetButton.text =
+            "🗑 Сбросить"
+
+        resetButton.setTextColor(
+            Color.WHITE
+        )
+
+        resetButton.setBackgroundColor(
+            Color.rgb(
+                170,
+                45,
+                55
+            )
+        )
+
+        resetButton.textSize =
+            16f
+
+        root.addView(
+            resetButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(65)
             )
         )
 
@@ -1956,8 +2594,17 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
+        resetButton.setOnClickListener {
+
+            showMainMenu()
+        }
+
         setScreen(root)
     }
+
+    // =========================================================
+    // РЕЗУЛЬТАТ ВЫБОРА ФОТО
+    // =========================================================
 
     @Suppress("DEPRECATION")
     override fun onActivityResult(
@@ -1974,7 +2621,8 @@ class MainActivity : AppCompatActivity() {
 
         if (
             requestCode == 1001 &&
-            resultCode == Activity.RESULT_OK
+            resultCode ==
+            Activity.RESULT_OK
         ) {
 
             val uri =
@@ -1984,6 +2632,10 @@ class MainActivity : AppCompatActivity() {
             uploadPhoto(uri)
         }
     }
+
+    // =========================================================
+    // ЗАГРУЗКА ФОТО
+    // =========================================================
 
     private fun uploadPhoto(
         uri: Uri
@@ -1998,7 +2650,8 @@ class MainActivity : AppCompatActivity() {
         try {
 
             val inputStream =
-                contentResolver.openInputStream(uri)
+                contentResolver
+                    .openInputStream(uri)
                     ?: return
 
             val bytes =
@@ -2008,7 +2661,8 @@ class MainActivity : AppCompatActivity() {
 
             val requestBody =
                 bytes.toRequestBody(
-                    "image/*".toMediaType()
+                    "image/*"
+                        .toMediaType()
                 )
 
             val multipart =
@@ -2028,11 +2682,14 @@ class MainActivity : AppCompatActivity() {
                     .url(
                         "$serverUrl/v1/calculate-image"
                     )
-                    .post(multipart)
+                    .post(
+                        multipart
+                    )
                     .build()
 
-            client.newCall(request).enqueue(
-
+            client.newCall(
+                request
+            ).enqueue(
                 object : Callback {
 
                     override fun onFailure(
@@ -2056,7 +2713,8 @@ class MainActivity : AppCompatActivity() {
                     ) {
 
                         val responseText =
-                            response.body?.string()
+                            response.body
+                                ?.string()
                                 ?: ""
 
                         if (
@@ -2106,8 +2764,11 @@ class MainActivity : AppCompatActivity() {
                                     if (
                                         recognized.isBlank()
                                     ) {
+
                                         "Задача по фото"
+
                                     } else {
+
                                         recognized
                                     }
 
@@ -2129,7 +2790,9 @@ class MainActivity : AppCompatActivity() {
                                 )
                             }
 
-                        } catch (_: Exception) {
+                        } catch (
+                            _: Exception
+                        ) {
 
                             runOnUiThread {
 
@@ -2144,7 +2807,9 @@ class MainActivity : AppCompatActivity() {
                 }
             )
 
-        } catch (_: Exception) {
+        } catch (
+            _: Exception
+        ) {
 
             Toast.makeText(
                 this,
@@ -2177,6 +2842,10 @@ class MainActivity : AppCompatActivity() {
         saveHistory()
     }
 
+    // =========================================================
+    // СОХРАНИТЬ ИСТОРИЮ
+    // =========================================================
+
     private fun saveHistory() {
 
         val prefs =
@@ -2194,6 +2863,10 @@ class MainActivity : AppCompatActivity() {
             )
             .apply()
     }
+
+    // =========================================================
+    // ЗАГРУЗИТЬ ИСТОРИЮ
+    // =========================================================
 
     private fun loadHistory() {
 
@@ -2222,6 +2895,10 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
+
+    // =========================================================
+    // ЭКРАН ИСТОРИИ
+    // =========================================================
 
     private fun openHistoryScreen() {
 
@@ -2256,12 +2933,20 @@ class MainActivity : AppCompatActivity() {
                         makeCard()
 
                     card.addView(
-                        makeCardText(item)
+                        makeCardText(
+                            item
+                        )
                     )
 
-                    root.addView(card)
+                    root.addView(
+                        card
+                    )
                 }
         }
+
+        // =====================================================
+        // ОЧИСТИТЬ ИСТОРИЮ
+        // =====================================================
 
         val clearButton =
             Button(this)
@@ -2277,11 +2962,14 @@ class MainActivity : AppCompatActivity() {
             blueColor
         )
 
+        clearButton.textSize =
+            16f
+
         root.addView(
             clearButton,
             LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                70
+                dp(70)
             )
         )
 
