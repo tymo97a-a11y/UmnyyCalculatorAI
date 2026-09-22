@@ -352,6 +352,77 @@ class MainActivity : AppCompatActivity() {
         return text
     }
 
+    private fun makeCardTitle(
+        title: String
+    ): TextView {
+
+        val text =
+            TextView(this)
+
+        text.text = title
+
+        text.setTextColor(
+            Color.WHITE
+        )
+
+        text.textSize = 19f
+
+        text.setTypeface(
+            null,
+            android.graphics.Typeface.BOLD
+        )
+
+        text.setPadding(
+            dp(18),
+            dp(18),
+            dp(18),
+            dp(8)
+        )
+
+        text.setBackgroundColor(
+            Color.rgb(17, 26, 43)
+        )
+
+        return text
+    }
+
+    private fun makeCardText(
+        textValue: String
+    ): TextView {
+
+        val text =
+            TextView(this)
+
+        text.text = textValue
+
+        text.setTextColor(
+            Color.rgb(220, 231, 255)
+        )
+
+        text.textSize = 17f
+
+        text.setPadding(
+            dp(18),
+            dp(8),
+            dp(18),
+            dp(20)
+        )
+
+        text.setBackgroundColor(
+            Color.rgb(17, 26, 43)
+        )
+
+        text.layoutParams =
+            LinearLayout.LayoutParams(
+                -1,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp(12)
+            }
+
+        return text
+    }
+
     // =========================================================
     // AI
     // =========================================================
@@ -517,11 +588,14 @@ class MainActivity : AppCompatActivity() {
                                         ""
                                     )
 
-                                resultView.text =
-                                    "ИТОГ:\n$answer\n\nОБЪЯСНЕНИЕ:\n$explanation"
-
                                 addHistory(
                                     "$text\n→ $answer"
+                                )
+
+                                openAIResultScreen(
+                                    text,
+                                    answer,
+                                    explanation
                                 )
 
                             } catch (e: Exception) {
@@ -533,6 +607,138 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             )
+    }
+
+    // =========================================================
+    // НОВЫЙ ЭКРАН РЕЗУЛЬТАТА AI
+    // =========================================================
+
+    private fun openAIResultScreen(
+        task: String,
+        answer: String,
+        explanation: String
+    ) {
+
+        clearScreen()
+
+        addBackButton()
+
+        addTitle(
+            "🤖 Результат",
+            "Умный калькулятор AI"
+        )
+
+        val content =
+            addScrollContent()
+
+        // Задача
+        content.addView(
+            makeCardTitle(
+                "📝 Задача"
+            )
+        )
+
+        content.addView(
+            makeCardText(
+                task
+            )
+        )
+
+        // Ответ
+        content.addView(
+            makeCardTitle(
+                "✅ ОТВЕТ"
+            )
+        )
+
+        val answerText =
+            makeCardText(
+                answer
+            )
+
+        answerText.textSize = 24f
+
+        answerText.setTypeface(
+            null,
+            android.graphics.Typeface.BOLD
+        )
+
+        answerText.setTextColor(
+            Color.WHITE
+        )
+
+        content.addView(
+            answerText
+        )
+
+        // Объяснение
+        content.addView(
+            makeCardTitle(
+                "📚 Пошаговое решение"
+            )
+        )
+
+        val explanationText =
+            makeCardText(
+                if (explanation.isBlank())
+                    "AI не предоставил дополнительного объяснения."
+                else
+                    explanation
+            )
+
+        content.addView(
+            explanationText
+        )
+
+        // График
+        val graphFunction =
+            parseFunction(task)
+
+        if (graphFunction != null) {
+
+            val graphButton =
+                makeButton(
+                    "📈 Построить график"
+                )
+
+            content.addView(
+                graphButton
+            )
+
+            graphButton.setOnClickListener {
+
+                openGraphScreen(task)
+            }
+
+            val tableButton =
+                makeButton(
+                    "📊 Открыть таблицу"
+                )
+
+            content.addView(
+                tableButton
+            )
+
+            tableButton.setOnClickListener {
+
+                openTableScreen(task)
+            }
+        }
+
+        // Повторить
+        val repeatButton =
+            makeButton(
+                "🤖 Решить новую задачу"
+            )
+
+        content.addView(
+            repeatButton
+        )
+
+        repeatButton.setOnClickListener {
+
+            openAIScreen()
+        }
     }
 
     // =========================================================
@@ -853,7 +1059,9 @@ class MainActivity : AppCompatActivity() {
     // ГРАФИК
     // =========================================================
 
-    private fun openGraphScreen() {
+    private fun openGraphScreen(
+        prefill: String? = null
+    ) {
 
         clearScreen()
 
@@ -871,6 +1079,10 @@ class MainActivity : AppCompatActivity() {
             makeEditText(
                 "Например: y = x^2 - 4x + 3"
             )
+
+        if (!prefill.isNullOrBlank()) {
+            input.setText(prefill)
+        }
 
         content.addView(input)
 
@@ -961,6 +1173,29 @@ class MainActivity : AppCompatActivity() {
 
             info.text =
                 "✅ График построен\n\nФункция: $text"
+        }
+
+        if (!prefill.isNullOrBlank()) {
+
+            val function =
+                parseFunction(prefill)
+
+            if (function != null) {
+
+                currentGraphFunction =
+                    function
+
+                graphView.setFunction(
+                    function,
+                    -10.0,
+                    10.0,
+                    -10.0,
+                    10.0
+                )
+
+                info.text =
+                    "✅ График построен\n\nФункция: $prefill"
+            }
         }
     }
 
@@ -1440,7 +1675,9 @@ class MainActivity : AppCompatActivity() {
     // ТАБЛИЦА
     // =========================================================
 
-    private fun openTableScreen() {
+    private fun openTableScreen(
+        prefill: String? = null
+    ) {
 
         clearScreen()
 
@@ -1458,6 +1695,10 @@ class MainActivity : AppCompatActivity() {
             makeEditText(
                 "Например: y = x^2 - 4x + 3"
             )
+
+        if (!prefill.isNullOrBlank()) {
+            input.setText(prefill)
+        }
 
         content.addView(input)
 
@@ -1521,6 +1762,46 @@ class MainActivity : AppCompatActivity() {
 
             table.text =
                 builder.toString()
+        }
+
+        if (!prefill.isNullOrBlank()) {
+
+            val function =
+                parseFunction(prefill)
+
+            if (function != null) {
+
+                val builder =
+                    StringBuilder()
+
+                builder.append(
+                    "      X              Y\n"
+                )
+
+                builder.append(
+                    "-------------------------\n"
+                )
+
+                for (x in -5..5) {
+
+                    val y =
+                        function(
+                            x.toDouble()
+                        )
+
+                    builder.append(
+                        String.format(
+                            Locale.US,
+                            "%7d     %10.3f\n",
+                            x,
+                            y
+                        )
+                    )
+                }
+
+                table.text =
+                    builder.toString()
+            }
         }
     }
 
