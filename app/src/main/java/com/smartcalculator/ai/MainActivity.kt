@@ -1,12 +1,17 @@
 package com.smartcalculator.ai
 
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.Space
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,27 +26,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
 import java.util.Locale
-import kotlin.math.abs
-import kotlin.math.sqrt
+import kotlin.math.pow
 
 class MainActivity : AppCompatActivity() {
-
-    private lateinit var input: EditText
-    private lateinit var result: TextView
-    private lateinit var calculatorDisplay: TextView
-    private lateinit var history: TextView
-
-    private lateinit var calculateButton: Button
-    private lateinit var photoButton: Button
-    private lateinit var clearPhotoButton: Button
-
-    private lateinit var photoPreview: ImageView
-    private lateinit var photoStatus: TextView
-
-    private lateinit var graphView: GraphView
-    private lateinit var graphButton: Button
-    private lateinit var tableButton: Button
-    private lateinit var graphInfo: TextView
 
     private val client = OkHttpClient()
 
@@ -51,44 +38,26 @@ class MainActivity : AppCompatActivity() {
     private val imageServerUrl =
         "https://umnyy-calculator-ai-server.onrender.com/v1/calculate-image"
 
-    private val historyList = mutableListOf<String>()
+    private lateinit var rootContainer: LinearLayout
 
     private var selectedPhotoUri: Uri? = null
 
-    private var calculatorValue = ""
-    private var firstNumber = 0.0
-    private var currentOperator = ""
-    private var waitingForSecondNumber = false
+    private var calculatorExpression = ""
+
+    private val historyList = mutableListOf<String>()
 
     private var currentGraphFunction: ((Double) -> Double)? = null
 
+    private lateinit var graphView: GraphView
+
     private val photoPicker =
-        registerForActivityResult(
-            ActivityResultContracts.GetContent()
-        ) { uri: Uri? ->
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
 
             if (uri != null) {
 
                 selectedPhotoUri = uri
 
-                photoPreview.setImageURI(uri)
-                photoPreview.visibility = View.VISIBLE
-
-                photoStatus.visibility = View.VISIBLE
-                photoStatus.text =
-                    "📷 Фото выбрано. Нажми «Рассчитать по фото»."
-
-                photoButton.text =
-                    "🤖  Рассчитать фото с AI"
-
-                result.text =
-                    "Фото готово к обработке AI."
-
-                Toast.makeText(
-                    this,
-                    "Фото выбрано",
-                    Toast.LENGTH_SHORT
-                ).show()
+                openPhotoScreen(uri)
             }
         }
 
@@ -97,39 +66,308 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        input = findViewById(R.id.input)
-        result = findViewById(R.id.result)
-        calculatorDisplay = findViewById(R.id.calculatorDisplay)
-        history = findViewById(R.id.history)
+        rootContainer = findViewById(android.R.id.content)
+            .findViewById(R.id.menuAI)
+            .parent as LinearLayout
 
-        calculateButton = findViewById(R.id.calculateButton)
-        photoButton = findViewById(R.id.photoButton)
-        clearPhotoButton = findViewById(R.id.clearPhotoButton)
+        setupMainMenu()
 
-        photoPreview = findViewById(R.id.photoPreview)
-        photoStatus = findViewById(R.id.photoStatus)
-
-        graphView = findViewById(R.id.graphView)
-        graphButton = findViewById(R.id.graphButton)
-        tableButton = findViewById(R.id.tableButton)
-        graphInfo = findViewById(R.id.graphInfo)
-
-        setupCalculator()
-        setupAI()
-        setupPhoto()
-        setupGraph()
         loadHistory()
+    }
+
+    // =========================================================
+    // ГЛАВНОЕ МЕНЮ
+    // =========================================================
+
+    private fun setupMainMenu() {
+
+        findViewById<View>(R.id.menuAI).setOnClickListener {
+            openAIScreen()
+        }
+
+        findViewById<View>(R.id.menuCalculator).setOnClickListener {
+            openCalculatorScreen()
+        }
+
+        findViewById<View>(R.id.menuGraph).setOnClickListener {
+            openGraphScreen()
+        }
+
+        findViewById<View>(R.id.menuPhoto).setOnClickListener {
+            openPhotoScreen(null)
+        }
+
+        findViewById<View>(R.id.menuTable).setOnClickListener {
+            openTableScreen()
+        }
+
+        findViewById<View>(R.id.menuHistory).setOnClickListener {
+            openHistoryScreen()
+        }
+    }
+
+    // =========================================================
+    // ОБЩИЕ ФУНКЦИИ ЭКРАНОВ
+    // =========================================================
+
+    private fun clearScreen() {
+
+        rootContainer.removeAllViews()
+
+        rootContainer.orientation = LinearLayout.VERTICAL
+
+        rootContainer.setPadding(
+            dp(20),
+            dp(20),
+            dp(20),
+            dp(20)
+        )
+
+        rootContainer.setBackgroundColor(
+            Color.rgb(7, 11, 20)
+        )
+    }
+
+    private fun addBackButton() {
+
+        val button = Button(this)
+
+        button.text = "← Назад"
+
+        button.setTextColor(Color.WHITE)
+
+        button.setOnClickListener {
+            setContentView(R.layout.activity_main)
+
+            rootContainer = findViewById(android.R.id.content)
+                .findViewById(R.id.menuAI)
+                .parent as LinearLayout
+
+            setupMainMenu()
+        }
+
+        rootContainer.addView(
+            button,
+            LinearLayout.LayoutParams(
+                -1,
+                dp(52)
+            )
+        )
+    }
+
+    private fun addTitle(
+        title: String,
+        subtitle: String
+    ) {
+
+        val titleView = TextView(this)
+
+        titleView.text = title
+
+        titleView.textColor = Color.WHITE
+
+        titleView.textSize = 27f
+
+        titleView.setTypeface(null, android.graphics.Typeface.BOLD)
+
+        titleView.setPadding(
+            0,
+            dp(18),
+            0,
+            dp(5)
+        )
+
+        rootContainer.addView(titleView)
+
+        val subtitleView = TextView(this)
+
+        subtitleView.text = subtitle
+
+        subtitleView.textColor =
+            Color.rgb(145, 160, 184)
+
+        subtitleView.textSize = 14f
+
+        subtitleView.setPadding(
+            0,
+            0,
+            0,
+            dp(20)
+        )
+
+        rootContainer.addView(subtitleView)
+    }
+
+    private fun addScrollContent(): LinearLayout {
+
+        val scroll = ScrollView(this)
+
+        scroll.layoutParams =
+            LinearLayout.LayoutParams(
+                -1,
+                0,
+                1f
+            )
+
+        val content = LinearLayout(this)
+
+        content.orientation =
+            LinearLayout.VERTICAL
+
+        content.setPadding(
+            0,
+            0,
+            0,
+            dp(20)
+        )
+
+        scroll.addView(content)
+
+        rootContainer.addView(scroll)
+
+        return content
+    }
+
+    private fun makeEditText(
+        hint: String
+    ): EditText {
+
+        val editText = EditText(this)
+
+        editText.hint = hint
+
+        editText.setHintTextColor(
+            Color.rgb(120, 135, 160)
+        )
+
+        editText.setTextColor(Color.WHITE)
+
+        editText.textSize = 17f
+
+        editText.setPadding(
+            dp(16),
+            dp(14),
+            dp(16),
+            dp(14)
+        )
+
+        editText.setBackgroundColor(
+            Color.rgb(17, 26, 43)
+        )
+
+        editText.layoutParams =
+            LinearLayout.LayoutParams(
+                -1,
+                dp(65)
+            ).apply {
+                bottomMargin = dp(12)
+            }
+
+        return editText
+    }
+
+    private fun makeButton(
+        text: String
+    ): Button {
+
+        val button = Button(this)
+
+        button.text = text
+
+        button.textSize = 16f
+
+        button.setTextColor(Color.WHITE)
+
+        button.setBackgroundColor(
+            Color.rgb(36, 107, 253)
+        )
+
+        button.layoutParams =
+            LinearLayout.LayoutParams(
+                -1,
+                dp(58)
+            ).apply {
+                bottomMargin = dp(10)
+            }
+
+        return button
+    }
+
+    private fun makeResultText(): TextView {
+
+        val text = TextView(this)
+
+        text.textColor = Color.WHITE
+
+        text.textSize = 17f
+
+        text.setPadding(
+            dp(16),
+            dp(16),
+            dp(16),
+            dp(16)
+        )
+
+        text.setBackgroundColor(
+            Color.rgb(17, 26, 43)
+        )
+
+        text.layoutParams =
+            LinearLayout.LayoutParams(
+                -1,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp(10)
+                bottomMargin = dp(15)
+            }
+
+        return text
     }
 
     // =========================================================
     // AI
     // =========================================================
 
-    private fun setupAI() {
+    private fun openAIScreen() {
+
+        clearScreen()
+
+        addBackButton()
+
+        addTitle(
+            "🤖 Рассчитать с AI",
+            "Опиши задачу обычными словами"
+        )
+
+        val content = addScrollContent()
+
+        val input = makeEditText(
+            "Например: 15% от 8400"
+        )
+
+        input.minLines = 3
+
+        input.gravity = Gravity.TOP
+
+        content.addView(input)
+
+        val calculateButton =
+            makeButton("🤖 Рассчитать с AI")
+
+        content.addView(calculateButton)
+
+        val result =
+            makeResultText()
+
+        result.text =
+            "Здесь появится результат AI"
+
+        content.addView(result)
 
         calculateButton.setOnClickListener {
 
-            val text = input.text.toString().trim()
+            val text =
+                input.text.toString().trim()
 
             if (text.isEmpty()) {
 
@@ -142,455 +380,492 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            sendToAI(text)
+            calculateButton.isEnabled = false
+
+            result.text =
+                "⏳ AI решает задачу..."
+
+            sendToAI(
+                text,
+                result,
+                calculateButton
+            )
         }
     }
 
-    private fun sendToAI(text: String) {
+    private fun sendToAI(
+        text: String,
+        resultView: TextView,
+        button: Button
+    ) {
 
-        calculateButton.isEnabled = false
+        val json =
+            JSONObject()
 
-        result.text = "⏳ AI решает задачу..."
+        json.put(
+            "text",
+            text
+        )
 
-        calculatorDisplay.text =
-            "Пожалуйста, подождите..."
+        val body =
+            json.toString()
+                .toRequestBody(
+                    "application/json".toMediaType()
+                )
 
-        val json = JSONObject()
+        val request =
+            Request.Builder()
+                .url(serverUrl)
+                .post(body)
+                .build()
 
-        json.put("text", text)
+        client.newCall(request)
+            .enqueue(
+                object : Callback {
 
-        val body = json
-            .toString()
-            .toRequestBody(
-                "application/json".toMediaType()
-            )
+                    override fun onFailure(
+                        call: Call,
+                        e: IOException
+                    ) {
 
-        val request = Request.Builder()
-            .url(serverUrl)
-            .post(body)
-            .build()
+                        runOnUiThread {
 
-        client.newCall(request).enqueue(
-            object : Callback {
+                            button.isEnabled = true
 
-                override fun onFailure(
-                    call: Call,
-                    e: IOException
-                ) {
-
-                    runOnUiThread {
-
-                        calculateButton.isEnabled = true
-
-                        result.text =
-                            "❌ Ошибка соединения с сервером"
-
-                        calculatorDisplay.text =
-                            "Проверь интернет-соединение."
-
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Не удалось подключиться к AI",
-                            Toast.LENGTH_LONG
-                        ).show()
+                            resultView.text =
+                                "❌ Ошибка соединения\n\n${e.message}"
+                        }
                     }
-                }
 
-                override fun onResponse(
-                    call: Call,
-                    response: okhttp3.Response
-                ) {
-
-                    response.use {
+                    override fun onResponse(
+                        call: Call,
+                        response: okhttp3.Response
+                    ) {
 
                         val responseText =
-                            it.body?.string().orEmpty()
+                            response.body?.string()
+                                ?: ""
 
-                        if (!it.isSuccessful) {
+                        runOnUiThread {
 
-                            runOnUiThread {
+                            button.isEnabled = true
 
-                                calculateButton.isEnabled = true
+                            if (!response.isSuccessful) {
 
-                                result.text =
-                                    "❌ Ошибка AI\nКод: ${it.code}"
+                                resultView.text =
+                                    "❌ Сервер вернул ошибку ${response.code}\n\n$responseText"
 
-                                calculatorDisplay.text =
-                                    responseText.take(500)
+                                return@runOnUiThread
                             }
 
-                            return
-                        }
+                            try {
 
-                        try {
+                                val jsonResponse =
+                                    JSONObject(responseText)
 
-                            val jsonResponse =
-                                JSONObject(responseText)
+                                val answer =
+                                    jsonResponse.optString(
+                                        "result",
+                                        "Нет результата"
+                                    )
 
-                            val answer =
-                                jsonResponse.optString(
-                                    "result",
-                                    "Нет результата"
-                                )
+                                val explanation =
+                                    jsonResponse.optString(
+                                        "explanation",
+                                        ""
+                                    )
 
-                            val explanation =
-                                jsonResponse.optString(
-                                    "explanation",
-                                    "Решение выполнено AI."
-                                )
-
-                            runOnUiThread {
-
-                                calculateButton.isEnabled = true
-
-                                result.text =
+                                resultView.text =
                                     "ИТОГ:\n$answer\n\nОБЪЯСНЕНИЕ:\n$explanation"
 
-                                calculatorDisplay.text =
-                                    createStepByStepSolution(text, answer, explanation)
-
                                 addHistory(
-                                    "$text → $answer"
+                                    "$text\n→ $answer"
                                 )
 
-                                tryBuildGraphFromText(text)
-                            }
+                            } catch (e: Exception) {
 
-                        } catch (e: Exception) {
-
-                            runOnUiThread {
-
-                                calculateButton.isEnabled = true
-
-                                result.text =
-                                    "❌ Не удалось обработать ответ AI"
-
-                                calculatorDisplay.text =
-                                    responseText.take(1000)
+                                resultView.text =
+                                    responseText
                             }
                         }
                     }
                 }
-            }
-        )
+            )
     }
 
     // =========================================================
-    // PHOTO
+    // КАЛЬКУЛЯТОР
     // =========================================================
 
-    private fun setupPhoto() {
+    private fun openCalculatorScreen() {
 
-        photoButton.setOnClickListener {
+        clearScreen()
 
-            val uri = selectedPhotoUri
+        addBackButton()
 
-            if (uri == null) {
+        addTitle(
+            "🧮 Калькулятор",
+            "Обычные математические расчёты"
+        )
 
-                photoPicker.launch("image/*")
+        val display =
+            TextView(this)
+
+        display.text = "0"
+
+        display.textColor = Color.WHITE
+
+        display.textSize = 30f
+
+        display.gravity =
+            Gravity.CENTER_VERTICAL or Gravity.END
+
+        display.setPadding(
+            dp(16),
+            0,
+            dp(16),
+            0
+        )
+
+        display.setBackgroundColor(
+            Color.rgb(17, 26, 43)
+        )
+
+        rootContainer.addView(
+            display,
+            LinearLayout.LayoutParams(
+                -1,
+                dp(75)
+            ).apply {
+                bottomMargin = dp(12)
+            }
+        )
+
+        val grid =
+            android.widget.GridLayout(this)
+
+        grid.columnCount = 4
+
+        grid.layoutParams =
+            LinearLayout.LayoutParams(
+                -1,
+                0,
+                1f
+            )
+
+        rootContainer.addView(grid)
+
+        val buttons =
+            listOf(
+                "AC", "⌫", "%", "÷",
+                "7", "8", "9", "×",
+                "4", "5", "6", "−",
+                "1", "2", "3", "+",
+                "0", ".", "="
+            )
+
+        for (value in buttons) {
+
+            val button =
+                Button(this)
+
+            button.text = value
+
+            button.textSize = 20f
+
+            button.setTextColor(Color.WHITE)
+
+            if (
+                value == "÷" ||
+                value == "×" ||
+                value == "−" ||
+                value == "+" ||
+                value == "="
+            ) {
+
+                button.setBackgroundColor(
+                    Color.rgb(36, 107, 253)
+                )
 
             } else {
 
-                sendPhotoToAI(uri)
+                button.setBackgroundColor(
+                    Color.rgb(17, 26, 43)
+                )
             }
-        }
 
-        clearPhotoButton.setOnClickListener {
+            val params =
+                android.widget.GridLayout.LayoutParams()
 
-            clearPhoto()
-        }
-    }
+            params.width = 0
 
-    private fun sendPhotoToAI(uri: Uri) {
+            params.height =
+                dp(65)
 
-        photoButton.isEnabled = false
-        clearPhotoButton.isEnabled = false
-
-        photoStatus.visibility = View.VISIBLE
-
-        photoStatus.text =
-            "⏳ Распознаваем пример..."
-
-        result.text =
-            "AI анализирует фотографию..."
-
-        Thread {
-
-            try {
-
-                val bytes =
-                    contentResolver
-                        .openInputStream(uri)
-                        ?.use { it.readBytes() }
-
-                if (bytes == null) {
-
-                    runOnUiThread {
-
-                        photoButton.isEnabled = true
-                        clearPhotoButton.isEnabled = true
-
-                        photoStatus.text =
-                            "❌ Не удалось прочитать фото"
-                    }
-
-                    return@Thread
-                }
-
-                val mimeType =
-                    contentResolver
-                        .getType(uri)
-                        ?: "image/jpeg"
-
-                val fileName =
-                    getFileName(uri)
-                        ?: "photo.jpg"
-
-                val requestBody =
-                    bytes.toRequestBody(
-                        mimeType.toMediaType()
-                    )
-
-                val multipartBody =
-                    MultipartBody.Builder()
-                        .setType(MultipartBody.FORM)
-                        .addFormDataPart(
-                            "file",
-                            fileName,
-                            requestBody
-                        )
-                        .build()
-
-                val request =
-                    Request.Builder()
-                        .url(imageServerUrl)
-                        .post(multipartBody)
-                        .build()
-
-                client.newCall(request).enqueue(
-                    object : Callback {
-
-                        override fun onFailure(
-                            call: Call,
-                            e: IOException
-                        ) {
-
-                            runOnUiThread {
-
-                                photoButton.isEnabled = true
-                                clearPhotoButton.isEnabled = true
-
-                                photoStatus.text =
-                                    "❌ Ошибка соединения"
-
-                                result.text =
-                                    "Не удалось отправить фото на AI."
-                            }
-                        }
-
-                        override fun onResponse(
-                            call: Call,
-                            response: okhttp3.Response
-                        ) {
-
-                            response.use {
-
-                                val responseText =
-                                    it.body?.string().orEmpty()
-
-                                if (!it.isSuccessful) {
-
-                                    runOnUiThread {
-
-                                        photoButton.isEnabled = true
-                                        clearPhotoButton.isEnabled = true
-
-                                        photoStatus.text =
-                                            "❌ Ошибка AI"
-
-                                        result.text =
-                                            "Код: ${it.code}\n\n" +
-                                                    responseText.take(500)
-                                    }
-
-                                    return
-                                }
-
-                                try {
-
-                                    val json =
-                                        JSONObject(responseText)
-
-                                    val recognized =
-                                        json.optString(
-                                            "recognized",
-                                            ""
-                                        )
-
-                                    val answer =
-                                        json.optString(
-                                            "result",
-                                            "Нет результата"
-                                        )
-
-                                    val explanation =
-                                        json.optString(
-                                            "explanation",
-                                            ""
-                                        )
-
-                                    runOnUiThread {
-
-                                        photoButton.isEnabled = true
-                                        clearPhotoButton.isEnabled = true
-
-                                        photoStatus.text =
-                                            "✅ Фото успешно обработано AI"
-
-                                        result.text =
-                                            "РАСПОЗНАНО:\n" +
-                                                    recognized +
-                                                    "\n\nИТОГ:\n" +
-                                                    answer +
-                                                    "\n\nОБЪЯСНЕНИЕ:\n" +
-                                                    explanation
-
-                                        calculatorDisplay.text =
-                                            createStepByStepSolution(
-                                                recognized,
-                                                answer,
-                                                explanation
-                                            )
-
-                                        addHistory(
-                                            "Фото: $recognized → $answer"
-                                        )
-
-                                        tryBuildGraphFromText(
-                                            recognized
-                                        )
-                                    }
-
-                                } catch (e: Exception) {
-
-                                    runOnUiThread {
-
-                                        photoButton.isEnabled = true
-                                        clearPhotoButton.isEnabled = true
-
-                                        photoStatus.text =
-                                            "❌ Ошибка обработки ответа"
-
-                                        result.text =
-                                            responseText.take(1000)
-                                    }
-                                }
-                            }
-                        }
-                    }
+            params.columnSpec =
+                android.widget.GridLayout.spec(
+                    android.widget.GridLayout.UNDEFINED,
+                    1f
                 )
 
-            } catch (e: Exception) {
+            params.setMargins(
+                dp(4),
+                dp(4),
+                dp(4),
+                dp(4)
+            )
 
-                runOnUiThread {
+            if (value == "0") {
 
-                    photoButton.isEnabled = true
-                    clearPhotoButton.isEnabled = true
-
-                    photoStatus.text =
-                        "❌ Ошибка чтения фотографии"
-
-                    result.text =
-                        e.message ?: "Неизвестная ошибка"
-                }
+                params.columnSpec =
+                    android.widget.GridLayout.spec(
+                        android.widget.GridLayout.UNDEFINED,
+                        2
+                    )
             }
 
-        }.start()
-    }
+            grid.addView(
+                button,
+                params
+            )
 
-    private fun getFileName(uri: Uri): String? {
+            button.setOnClickListener {
 
-        var name: String? = null
-
-        contentResolver.query(
-            uri,
-            arrayOf(OpenableColumns.DISPLAY_NAME),
-            null,
-            null,
-            null
-        )?.use { cursor ->
-
-            if (cursor.moveToFirst()) {
-
-                val index =
-                    cursor.getColumnIndex(
-                        OpenableColumns.DISPLAY_NAME
-                    )
-
-                if (index >= 0) {
-                    name = cursor.getString(index)
-                }
+                calculatorButton(
+                    value,
+                    display
+                )
             }
         }
-
-        return name
     }
 
-    private fun clearPhoto() {
+    private var firstNumber = 0.0
 
-        selectedPhotoUri = null
+    private var operator = ""
 
-        photoPreview.setImageDrawable(null)
+    private var waitingForSecond = false
 
-        photoPreview.visibility =
-            View.GONE
+    private fun calculatorButton(
+        value: String,
+        display: TextView
+    ) {
 
-        photoStatus.visibility =
-            View.GONE
+        if (value == "AC") {
 
-        photoButton.text =
-            "📷  Рассчитать по фото"
+            calculatorExpression = ""
 
-        result.text =
-            "Здесь появится результат"
+            firstNumber = 0.0
 
-        calculatorDisplay.text =
-            "Введите задачу выше, и AI покажет решение."
+            operator = ""
+
+            waitingForSecond = false
+
+            display.text = "0"
+
+            return
+        }
+
+        if (value == "⌫") {
+
+            if (calculatorExpression.isNotEmpty()) {
+
+                calculatorExpression =
+                    calculatorExpression.dropLast(1)
+
+                display.text =
+                    if (
+                        calculatorExpression.isEmpty()
+                    ) "0"
+                    else calculatorExpression
+            }
+
+            return
+        }
+
+        if (
+            value == "+" ||
+            value == "−" ||
+            value == "×" ||
+            value == "÷"
+        ) {
+
+            if (
+                calculatorExpression.isNotEmpty()
+            ) {
+
+                firstNumber =
+                    calculatorExpression
+                        .replace("−", "-")
+                        .replace("×", "*")
+                        .replace("÷", "/")
+                        .toDoubleOrNull()
+                        ?: 0.0
+
+                operator = value
+
+                calculatorExpression = ""
+
+                waitingForSecond = true
+            }
+
+            return
+        }
+
+        if (value == "=") {
+
+            val second =
+                calculatorExpression
+                    .toDoubleOrNull()
+
+            if (
+                second != null &&
+                operator.isNotEmpty()
+            ) {
+
+                val answer =
+                    when (operator) {
+
+                        "+" ->
+                            firstNumber + second
+
+                        "−" ->
+                            firstNumber - second
+
+                        "×" ->
+                            firstNumber * second
+
+                        "÷" ->
+                            if (second == 0.0)
+                                Double.NaN
+                            else
+                                firstNumber / second
+
+                        else -> second
+                    }
+
+                val formatted =
+                    formatNumber(answer)
+
+                display.text =
+                    formatted
+
+                addHistory(
+                    "$firstNumber $operator $second = $formatted"
+                )
+
+                calculatorExpression =
+                    formatted
+
+                operator = ""
+
+                waitingForSecond = false
+            }
+
+            return
+        }
+
+        if (value == "%") {
+
+            val number =
+                calculatorExpression
+                    .toDoubleOrNull()
+
+            if (number != null) {
+
+                val answer =
+                    number / 100.0
+
+                calculatorExpression =
+                    formatNumber(answer)
+
+                display.text =
+                    calculatorExpression
+            }
+
+            return
+        }
+
+        if (value == ".") {
+
+            if (
+                !calculatorExpression
+                    .contains(".")
+            ) {
+
+                calculatorExpression +=
+                    if (
+                        calculatorExpression.isEmpty()
+                    ) "0."
+                    else "."
+            }
+
+        } else {
+
+            calculatorExpression += value
+        }
+
+        display.text =
+            calculatorExpression
     }
 
     // =========================================================
-    // GRAPH
+    // ГРАФИК
     // =========================================================
 
-    private fun setupGraph() {
+    private fun openGraphScreen() {
+
+        clearScreen()
+
+        addBackButton()
+
+        addTitle(
+            "📈 График функции",
+            "Введите математическую функцию"
+        )
+
+        val content =
+            addScrollContent()
+
+        val input =
+            makeEditText(
+                "Например: y = x^2 - 4x + 3"
+            )
+
+        content.addView(input)
+
+        val graphButton =
+            makeButton(
+                "📈 Построить график"
+            )
+
+        content.addView(graphButton)
+
+        graphView =
+            GraphView(this)
+
+        graphView.setBackgroundColor(
+            Color.rgb(14, 23, 40)
+        )
+
+        content.addView(
+            graphView,
+            LinearLayout.LayoutParams(
+                -1,
+                dp(380)
+            ).apply {
+                bottomMargin = dp(12)
+            }
+        )
+
+        val info =
+            makeResultText()
+
+        info.text =
+            "Введите функцию и нажмите «Построить график»"
+
+        content.addView(info)
 
         graphButton.setOnClickListener {
-
-            val text =
-                input.text.toString().trim()
-
-            if (text.isEmpty()) {
-
-                Toast.makeText(
-                    this,
-                    "Введите функцию",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                return@setOnClickListener
-            }
-
-            if (!tryBuildGraphFromText(text)) {
-
-                Toast.makeText(
-                    this,
-                    "Попробуйте: y = x² - 4x + 3",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
-
-        tableButton.setOnClickListener {
 
             val text =
                 input.text.toString().trim()
@@ -611,66 +886,56 @@ class MainActivity : AppCompatActivity() {
 
             if (function == null) {
 
-                Toast.makeText(
-                    this,
-                    "Не удалось определить функцию",
-                    Toast.LENGTH_LONG
-                ).show()
+                info.text =
+                    """
+                    ❌ Не удалось распознать функцию.
+
+                    Примеры:
+
+                    y = x^2
+                    y = x^2 - 4x + 3
+                    y = 2x + 5
+                    x^2 - 9
+                    """.trimIndent()
+
+                graphView.clearGraph()
 
                 return@setOnClickListener
             }
 
-            showValueTable(function)
+            currentGraphFunction =
+                function
+
+            graphView.setFunction(
+                function,
+                -10.0,
+                10.0,
+                -10.0,
+                10.0
+            )
+
+            info.text =
+                "✅ График построен\n\n$f"
         }
     }
 
-    private fun tryBuildGraphFromText(
-        text: String
-    ): Boolean {
-
-        val parsed =
-            parseFunction(text)
-                ?: return false
-
-        currentGraphFunction =
-            parsed.function
-
-        graphView.setFunction(
-            parsed.function
-        )
-
-        graphInfo.text =
-            "📈 Функция:\n${parsed.normalized}\n\n" +
-                    "Диапазон X: -10 ... 10\n" +
-                    "График построен автоматически."
-
-        return true
-    }
-
-    private data class ParsedFunction(
-        val function: (Double) -> Double,
-        val normalized: String
-    )
+    // =========================================================
+    // РАСПОЗНАВАНИЕ ФУНКЦИИ
+    // =========================================================
 
     private fun parseFunction(
-        originalText: String
-    ): ParsedFunction? {
+        original: String
+    ): ((Double) -> Double)? {
 
         var text =
-            originalText
+            original
                 .lowercase(Locale.getDefault())
                 .replace(" ", "")
-                .replace("−", "-")
-                .replace("–", "-")
-                .replace("×", "*")
                 .replace("²", "^2")
-                .replace("³", "^3")
+                .replace("−", "-")
+                .replace("×", "*")
 
         if (text.startsWith("y=")) {
-            text = text.substring(2)
-        }
-
-        if (text.startsWith("y:")) {
             text = text.substring(2)
         }
 
@@ -678,102 +943,45 @@ class MainActivity : AppCompatActivity() {
             text = text.substring(5)
         }
 
-        text =
-            text.replace("**", "^")
-
-        if (!text.contains("x")) {
-            return null
+        if (text.endsWith("=0")) {
+            text = text.dropLast(2)
         }
 
-        // -----------------------------------------------------
-        // y = x²
-        // y = x^2
-        // -----------------------------------------------------
-
+        // x^2
         if (
             text == "x^2" ||
-            text == "x2"
+            text == "x*x"
         ) {
 
-            return ParsedFunction(
-                function = { x -> x * x },
-                normalized = "y = x²"
-            )
+            return { x ->
+                x.pow(2)
+            }
         }
 
-        // -----------------------------------------------------
-        // y = x
-        // -----------------------------------------------------
-
+        // x
         if (text == "x") {
 
-            return ParsedFunction(
-                function = { x -> x },
-                normalized = "y = x"
-            )
+            return { x ->
+                x
+            }
         }
 
-        // -----------------------------------------------------
-        // y = 2x
-        // y = -3x
-        // -----------------------------------------------------
+        // -x
+        if (text == "-x") {
 
-        val linearRegex =
-            Regex(
-                "^([+-]?\\d*\\.?\\d*)x([+-]\\d*\\.?\\d+)?$"
-            )
-
-        val linearMatch =
-            linearRegex.matchEntire(text)
-
-        if (linearMatch != null) {
-
-            val aText =
-                linearMatch.groupValues[1]
-
-            val bText =
-                linearMatch.groupValues[2]
-
-            val a =
-                when (aText) {
-                    "", "+" -> 1.0
-                    "-" -> -1.0
-                    else -> aText.toDoubleOrNull()
-                        ?: return null
-                }
-
-            val b =
-                if (bText.isEmpty()) {
-                    0.0
-                } else {
-                    bText.toDoubleOrNull()
-                        ?: return null
-                }
-
-            return ParsedFunction(
-                function = { x ->
-                    a * x + b
-                },
-                normalized =
-                    "y = ${formatNumber(a)}x " +
-                            "${if (b >= 0) "+" else "-"} " +
-                            "${formatNumber(abs(b))}"
-            )
+            return { x ->
+                -x
+            }
         }
 
-        // -----------------------------------------------------
-        // y = ax² + bx + c
-        // -----------------------------------------------------
-
-        val quadraticRegex =
+        // ax^2 + bx + c
+        val quadratic =
             Regex(
-                "^([+-]?\\d*\\.?\\d*)x\\^2" +
-                        "([+-]\\d*\\.?\\d*)x?" +
-                        "([+-]\\d*\\.?\\d+)?$"
+                """^([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d*)x([+-]\d*\.?\d+)?$"""
             )
 
         val quadraticMatch =
-            quadraticRegex.matchEntire(text)
+            quadratic.matchEntire(text)
 
         if (quadraticMatch != null) {
 
@@ -795,791 +1003,579 @@ class MainActivity : AppCompatActivity() {
                 }
 
             val b =
-                if (bText.isEmpty()) {
-                    0.0
-                } else {
-                    bText.toDoubleOrNull()
+                when (bText) {
+                    "", "+" -> 1.0
+                    "-" -> -1.0
+                    else -> bText.toDoubleOrNull()
                         ?: return null
                 }
 
             val c =
-                if (cText.isEmpty()) {
+                if (cText.isEmpty())
                     0.0
-                } else {
+                else
                     cText.toDoubleOrNull()
+                        ?: return null
+
+            return { x ->
+                a * x * x +
+                    b * x +
+                    c
+            }
+        }
+
+        // ax + b
+        val linear =
+            Regex(
+                """^([+-]?\d*\.?\d*)x([+-]\d*\.?\d+)?$"""
+            )
+
+        val linearMatch =
+            linear.matchEntire(text)
+
+        if (linearMatch != null) {
+
+            val aText =
+                linearMatch.groupValues[1]
+
+            val bText =
+                linearMatch.groupValues[2]
+
+            val a =
+                when (aText) {
+                    "", "+" -> 1.0
+                    "-" -> -1.0
+                    else -> aText.toDoubleOrNull()
                         ?: return null
                 }
 
-            return ParsedFunction(
-                function = { x ->
-                    a * x * x + b * x + c
-                },
-                normalized =
-                    buildQuadraticText(
-                        a,
-                        b,
-                        c
-                    )
-            )
+            val b =
+                if (bText.isEmpty())
+                    0.0
+                else
+                    bText.toDoubleOrNull()
+                        ?: return null
+
+            return { x ->
+                a * x + b
+            }
         }
 
-        // -----------------------------------------------------
-        // Особый случай: x² - 4x + 3
-        // -----------------------------------------------------
+        return createSimpleFunction(text)
+    }
 
-        if (
-            text.contains("x^2") &&
-            text.contains("x")
-        ) {
+    private fun createSimpleFunction(
+        text: String
+    ): ((Double) -> Double)? {
 
-            val expression =
-                text
+        if (!text.contains("x")) {
 
-            val function:
-                    (Double) -> Double =
-                { x ->
+            val number =
+                text.toDoubleOrNull()
+                    ?: return null
 
-                    evaluateSimpleFunction(
-                        expression,
-                        x
-                    )
-                }
-
-            return ParsedFunction(
-                function = function,
-                normalized =
-                    "y = $expression"
-            )
+            return {
+                number
+            }
         }
 
-        return null
+        return { x ->
+
+            try {
+
+                val expression =
+                    text
+                        .replace("x^2", "${x * x}")
+                        .replace("x", "($x)")
+
+                evaluateExpression(
+                    expression
+                )
+
+            } catch (_: Exception) {
+
+                Double.NaN
+            }
+        }
     }
 
-    private fun evaluateSimpleFunction(
-        expression: String,
-        x: Double
-    ): Double {
-
-        var text = expression
-
-        text =
-            text.replace(
-                "x^2",
-                "(${x * x})"
-            )
-
-        text =
-            text.replace(
-                "x",
-                "($x)"
-            )
-
-        return evaluateBasicExpression(
-            text
-        )
-    }
-
-    private fun evaluateBasicExpression(
+    private fun evaluateExpression(
         expression: String
     ): Double {
 
-        val clean =
+        var value =
             expression
-                .replace("(", "")
-                .replace(")", "")
 
+        value =
+            value.replace(
+                "−",
+                "-"
+            )
+
+        // Простая обработка + и -
         val parts =
-            Regex(
-                "([+-]?\\d*\\.?\\d+)"
-            ).findAll(clean)
+            value.split(
+                Regex("(?=[+-])")
+            )
 
-        var total = 0.0
+        var result = 0.0
 
-        for (match in parts) {
+        for (part in parts) {
 
-            val value =
-                match.value.toDoubleOrNull()
-                    ?: continue
+            if (part.isBlank()) continue
 
-            total += value
+            result +=
+                part.toDouble()
         }
 
-        return total
-    }
-
-    private fun buildQuadraticText(
-        a: Double,
-        b: Double,
-        c: Double
-    ): String {
-
-        val aText =
-            if (a == 1.0) {
-                ""
-            } else if (a == -1.0) {
-                "-"
-            } else {
-                formatNumber(a)
-            }
-
-        val bText =
-            if (b == 0.0) {
-                ""
-            } else {
-                if (b > 0) {
-                    "+ ${formatNumber(b)}x"
-                } else {
-                    "- ${formatNumber(abs(b))}x"
-                }
-            }
-
-        val cText =
-            if (c == 0.0) {
-                ""
-            } else {
-                if (c > 0) {
-                    "+ ${formatNumber(c)}"
-                } else {
-                    "- ${formatNumber(abs(c))}"
-                }
-            }
-
-        return "y = ${aText}x² $bText $cText"
-            .replace(
-                Regex("\\s+"),
-                " "
-            )
-            .trim()
+        return result
     }
 
     // =========================================================
-    // TABLE
+    // ФОТО
     // =========================================================
 
-    private fun showValueTable(
-        parsedFunction: ParsedFunction
+    private fun openPhotoScreen(
+        uri: Uri?
     ) {
 
-        val values = StringBuilder()
+        clearScreen()
 
-        values.append(
-            "📊 ТАБЛИЦА ЗНАЧЕНИЙ\n\n"
+        addBackButton()
+
+        addTitle(
+            "📷 Решить по фото",
+            "Сфотографируй или выбери математическую задачу"
         )
 
-        values.append(
-            "x\t\t y\n"
+        val content =
+            addScrollContent()
+
+        val chooseButton =
+            makeButton(
+                "📷 Выбрать фото"
+            )
+
+        content.addView(
+            chooseButton
         )
 
-        values.append(
-            "────────────\n"
+        val preview =
+            ImageView(this)
+
+        preview.adjustViewBounds = true
+
+        preview.setPadding(
+            dp(5),
+            dp(5),
+            dp(5),
+            dp(5)
         )
 
-        for (x in -5..5) {
+        content.addView(
+            preview,
+            LinearLayout.LayoutParams(
+                -1,
+                dp(280)
+            ).apply {
+                bottomMargin = dp(10)
+            }
+        )
 
-            val y =
-                try {
-                    parsedFunction.function(
-                        x.toDouble()
+        val result =
+            makeResultText()
+
+        result.text =
+            "Выберите фотографию задачи"
+
+        content.addView(result)
+
+        chooseButton.setOnClickListener {
+
+            photoPicker.launch(
+                "image/*"
+            )
+        }
+
+        if (uri != null) {
+
+            preview.setImageURI(uri)
+
+            result.text =
+                "⏳ Распознавание задачи..."
+
+            sendPhotoToAI(
+                uri,
+                result
+            )
+        }
+    }
+
+    private fun sendPhotoToAI(
+        uri: Uri,
+        resultView: TextView
+    ) {
+
+        try {
+
+            val inputStream =
+                contentResolver.openInputStream(uri)
+                    ?: throw IOException(
+                        "Не удалось открыть изображение"
                     )
-                } catch (_: Exception) {
-                    Double.NaN
+
+            val bytes =
+                inputStream.use {
+                    it.readBytes()
                 }
 
-            if (y.isFinite()) {
+            val fileName =
+                getFileName(uri)
 
-                values.append(
-                    "$x\t\t${formatNumber(y)}\n"
+            val imageBody =
+                bytes.toRequestBody(
+                    "image/jpeg".toMediaType()
                 )
+
+            val multipart =
+                MultipartBody.Builder()
+                    .setType(
+                        MultipartBody.FORM
+                    )
+                    .addFormDataPart(
+                        "file",
+                        fileName,
+                        imageBody
+                    )
+                    .build()
+
+            val request =
+                Request.Builder()
+                    .url(imageServerUrl)
+                    .post(multipart)
+                    .build()
+
+            client.newCall(request)
+                .enqueue(
+                    object : Callback {
+
+                        override fun onFailure(
+                            call: Call,
+                            e: IOException
+                        ) {
+
+                            runOnUiThread {
+
+                                resultView.text =
+                                    "❌ Ошибка соединения\n\n${e.message}"
+                            }
+                        }
+
+                        override fun onResponse(
+                            call: Call,
+                            response: okhttp3.Response
+                        ) {
+
+                            val responseText =
+                                response.body?.string()
+                                    ?: ""
+
+                            runOnUiThread {
+
+                                if (!response.isSuccessful) {
+
+                                    resultView.text =
+                                        "❌ Ошибка ${response.code}\n\n$responseText"
+
+                                    return@runOnUiThread
+                                }
+
+                                try {
+
+                                    val json =
+                                        JSONObject(
+                                            responseText
+                                        )
+
+                                    val recognized =
+                                        json.optString(
+                                            "recognized",
+                                            ""
+                                        )
+
+                                    val answer =
+                                        json.optString(
+                                            "result",
+                                            ""
+                                        )
+
+                                    val explanation =
+                                        json.optString(
+                                            "explanation",
+                                            ""
+                                        )
+
+                                    resultView.text =
+                                        """
+                                        📝 РАСПОЗНАНО:
+
+                                        $recognized
+
+                                        ✅ ИТОГ:
+
+                                        $answer
+
+                                        💡 ОБЪЯСНЕНИЕ:
+
+                                        $explanation
+                                        """.trimIndent()
+
+                                    addHistory(
+                                        "📷 $recognized\n→ $answer"
+                                    )
+
+                                } catch (
+                                    e: Exception
+                                ) {
+
+                                    resultView.text =
+                                        responseText
+                                }
+                            }
+                        }
+                    }
+                )
+
+        } catch (e: Exception) {
+
+            resultView.text =
+                "❌ Не удалось отправить фото\n\n${e.message}"
+        }
+    }
+
+    private fun getFileName(
+        uri: Uri
+    ): String {
+
+        var name = "photo.jpg"
+
+        val cursor =
+            contentResolver.query(
+                uri,
+                null,
+                null,
+                null,
+                null
+            )
+
+        cursor?.use {
+
+            val index =
+                it.getColumnIndex(
+                    OpenableColumns.DISPLAY_NAME
+                )
+
+            if (
+                index >= 0 &&
+                it.moveToFirst()
+            ) {
+
+                name =
+                    it.getString(index)
             }
         }
 
-        result.text =
-            values.toString()
-
-        calculatorDisplay.text =
-            "Для функции:\n" +
-                    parsedFunction.normalized +
-                    "\n\nТаблица построена для x от -5 до 5."
-
-        addHistory(
-            "Таблица: ${parsedFunction.normalized}"
-        )
+        return name
     }
 
     // =========================================================
-    // STEP BY STEP
+    // ТАБЛИЦА
     // =========================================================
 
-    private fun createStepByStepSolution(
-        question: String,
-        answer: String,
-        explanation: String
-    ): String {
+    private fun openTableScreen() {
 
-        val normalized =
-            question
-                .lowercase(Locale.getDefault())
-                .replace(" ", "")
-                .replace("²", "^2")
-                .replace("−", "-")
-                .replace("–", "-")
+        clearScreen()
 
-        val quadratic =
-            parseQuadraticEquation(
-                normalized
+        addBackButton()
+
+        addTitle(
+            "📊 Таблица значений",
+            "Значения выбранной функции"
+        )
+
+        val content =
+            addScrollContent()
+
+        val input =
+            makeEditText(
+                "Например: y = x^2 - 4x + 3"
             )
 
-        if (quadratic != null) {
+        content.addView(input)
 
-            val a = quadratic.first
-            val b = quadratic.second
-            val c = quadratic.third
+        val button =
+            makeButton(
+                "📊 Построить таблицу"
+            )
 
-            val d =
-                b * b - 4.0 * a * c
+        content.addView(button)
 
-            val text =
+        val table =
+            makeResultText()
+
+        table.text =
+            "Введите функцию"
+
+        content.addView(table)
+
+        button.setOnClickListener {
+
+            val function =
+                parseFunction(
+                    input.text.toString()
+                )
+
+            if (function == null) {
+
+                table.text =
+                    "❌ Не удалось распознать функцию"
+
+                return@setOnClickListener
+            }
+
+            val builder =
                 StringBuilder()
 
-            text.append(
-                "1. Приводим уравнение к виду:\n"
+            builder.append(
+                "      X              Y\n"
             )
 
-            text.append(
-                "${formatNumber(a)}x² " +
-                        "${if (b >= 0) "+" else "-"} " +
-                        "${formatNumber(abs(b))}x " +
-                        "${if (c >= 0) "+" else "-"} " +
-                        "${formatNumber(abs(c))} = 0\n\n"
+            builder.append(
+                "-------------------------\n"
             )
 
-            text.append(
-                "2. Находим дискриминант:\n"
-            )
+            for (x in -5..5) {
 
-            text.append(
-                "D = b² − 4ac\n"
-            )
+                val y =
+                    function(x.toDouble())
 
-            text.append(
-                "D = ${formatNumber(b)}² − " +
-                        "4 × ${formatNumber(a)} × " +
-                        "${formatNumber(c)}\n"
-            )
-
-            text.append(
-                "D = ${formatNumber(d)}\n\n"
-            )
-
-            if (d > 0) {
-
-                val x1 =
-                    (-b + sqrt(d)) /
-                            (2.0 * a)
-
-                val x2 =
-                    (-b - sqrt(d)) /
-                            (2.0 * a)
-
-                text.append(
-                    "3. Находим корни:\n"
-                )
-
-                text.append(
-                    "x₁ = ${formatNumber(x1)}\n"
-                )
-
-                text.append(
-                    "x₂ = ${formatNumber(x2)}\n\n"
-                )
-
-                text.append(
-                    "4. Ответ:\n"
-                )
-
-                text.append(
-                    "x₁ = ${formatNumber(x1)}, " +
-                            "x₂ = ${formatNumber(x2)}"
-                )
-
-            } else if (d == 0.0) {
-
-                val x =
-                    -b / (2.0 * a)
-
-                text.append(
-                    "3. Один корень:\n"
-                )
-
-                text.append(
-                    "x = ${formatNumber(x)}\n\n"
-                )
-
-                text.append(
-                    "4. Ответ:\n"
-                )
-
-                text.append(
-                    "x = ${formatNumber(x)}"
-                )
-
-            } else {
-
-                text.append(
-                    "3. Дискриминант меньше нуля.\n\n"
-                )
-
-                text.append(
-                    "4. Действительных корней нет."
+                builder.append(
+                    String.format(
+                        Locale.US,
+                        "%7d     %10.3f\n",
+                        x,
+                        y
+                    )
                 )
             }
 
-            return text.toString()
+            table.text =
+                builder.toString()
         }
-
-        val linear =
-            parseLinearEquation(
-                normalized
-            )
-
-        if (linear != null) {
-
-            val a = linear.first
-            val b = linear.second
-
-            if (a != 0.0) {
-
-                val x =
-                    -b / a
-
-                return """
-1. Переносим свободный член.
-
-2. Получаем:
-${formatNumber(a)}x = ${formatNumber(-b)}
-
-3. Делим обе части на ${formatNumber(a)}.
-
-4. Ответ:
-x = ${formatNumber(x)}
-                """.trimIndent()
-            }
-        }
-
-        return """
-РЕШЕНИЕ
-
-Задача:
-$question
-
-Ответ:
-$answer
-
-Объяснение AI:
-$explanation
-        """.trimIndent()
-    }
-
-    private fun parseQuadraticEquation(
-        text: String
-    ): Triple<Double, Double, Double>? {
-
-        var clean =
-            text
-
-        clean =
-            clean.replace("=0", "")
-
-        val regex =
-            Regex(
-                "^([+-]?\\d*\\.?\\d*)x\\^2" +
-                        "([+-]\\d*\\.?\\d*)x" +
-                        "([+-]\\d*\\.?\\d+)?$"
-            )
-
-        val match =
-            regex.matchEntire(clean)
-                ?: return null
-
-        val aText =
-            match.groupValues[1]
-
-        val bText =
-            match.groupValues[2]
-
-        val cText =
-            match.groupValues[3]
-
-        val a =
-            when (aText) {
-                "", "+" -> 1.0
-                "-" -> -1.0
-                else -> aText.toDoubleOrNull()
-                    ?: return null
-            }
-
-        val b =
-            bText.toDoubleOrNull()
-                ?: return null
-
-        val c =
-            if (cText.isEmpty()) {
-                0.0
-            } else {
-                cText.toDoubleOrNull()
-                    ?: return null
-            }
-
-        return Triple(a, b, c)
-    }
-
-    private fun parseLinearEquation(
-        text: String
-    ): Pair<Double, Double>? {
-
-        val clean =
-            text.replace("=0", "")
-
-        val regex =
-            Regex(
-                "^([+-]?\\d*\\.?\\d*)x" +
-                        "([+-]\\d*\\.?\\d+)?$"
-            )
-
-        val match =
-            regex.matchEntire(clean)
-                ?: return null
-
-        val aText =
-            match.groupValues[1]
-
-        val bText =
-            match.groupValues[2]
-
-        val a =
-            when (aText) {
-                "", "+" -> 1.0
-                "-" -> -1.0
-                else -> aText.toDoubleOrNull()
-                    ?: return null
-            }
-
-        val b =
-            if (bText.isEmpty()) {
-                0.0
-            } else {
-                bText.toDoubleOrNull()
-                    ?: return null
-            }
-
-        return Pair(a, b)
     }
 
     // =========================================================
-    // Обычный калькулятор
+    // ИСТОРИЯ
     // =========================================================
 
-    private fun setupCalculator() {
+    private fun openHistoryScreen() {
 
-        val numberButtons =
-            mapOf(
-                R.id.button0 to "0",
-                R.id.button1 to "1",
-                R.id.button2 to "2",
-                R.id.button3 to "3",
-                R.id.button4 to "4",
-                R.id.button5 to "5",
-                R.id.button6 to "6",
-                R.id.button7 to "7",
-                R.id.button8 to "8",
-                R.id.button9 to "9"
-            )
+        clearScreen()
 
-        for ((id, number) in numberButtons) {
+        addBackButton()
 
-            findViewById<Button>(id)
-                .setOnClickListener {
-
-                    addNumber(number)
-                }
-        }
-
-        findViewById<Button>(
-            R.id.buttonDot
-        ).setOnClickListener {
-
-            addNumber(".")
-        }
-
-        findViewById<Button>(
-            R.id.buttonPlus
-        ).setOnClickListener {
-
-            chooseOperator("+")
-        }
-
-        findViewById<Button>(
-            R.id.buttonMinus
-        ).setOnClickListener {
-
-            chooseOperator("-")
-        }
-
-        findViewById<Button>(
-            R.id.buttonMultiply
-        ).setOnClickListener {
-
-            chooseOperator("*")
-        }
-
-        findViewById<Button>(
-            R.id.buttonDivide
-        ).setOnClickListener {
-
-            chooseOperator("/")
-        }
-
-        findViewById<Button>(
-            R.id.buttonEquals
-        ).setOnClickListener {
-
-            calculate()
-        }
-
-        findViewById<Button>(
-            R.id.buttonClear
-        ).setOnClickListener {
-
-            clearCalculator()
-        }
-
-        updateCalculatorDisplay()
-    }
-
-    private fun addNumber(value: String) {
-
-        if (waitingForSecondNumber) {
-
-            calculatorValue = ""
-
-            waitingForSecondNumber = false
-        }
-
-        if (
-            value == "." &&
-            calculatorValue.contains(".")
-        ) {
-            return
-        }
-
-        calculatorValue += value
-
-        updateCalculatorDisplay()
-    }
-
-    private fun chooseOperator(
-        operator: String
-    ) {
-
-        if (calculatorValue.isEmpty()) {
-            return
-        }
-
-        firstNumber =
-            calculatorValue.toDoubleOrNull()
-                ?: return
-
-        currentOperator =
-            operator
-
-        waitingForSecondNumber = true
-    }
-
-    private fun calculate() {
-
-        if (
-            currentOperator.isEmpty() ||
-            calculatorValue.isEmpty()
-        ) {
-            return
-        }
-
-        val secondNumber =
-            calculatorValue.toDoubleOrNull()
-                ?: return
-
-        val answer =
-            when (currentOperator) {
-
-                "+" ->
-                    firstNumber + secondNumber
-
-                "-" ->
-                    firstNumber - secondNumber
-
-                "*" ->
-                    firstNumber * secondNumber
-
-                "/" -> {
-
-                    if (secondNumber == 0.0) {
-
-                        result.text =
-                            "На ноль делить нельзя."
-
-                        return
-                    }
-
-                    firstNumber / secondNumber
-                }
-
-                else -> 0.0
-            }
-
-        val expression =
-            "${formatNumber(firstNumber)} " +
-                    "$currentOperator " +
-                    "${formatNumber(secondNumber)}"
-
-        val answerText =
-            formatNumber(answer)
-
-        calculatorValue =
-            answerText
-
-        currentOperator = ""
-
-        waitingForSecondNumber = true
-
-        updateCalculatorDisplay()
-
-        result.text =
-            "ИТОГ:\n$answerText\n\n" +
-                    "РЕШЕНИЕ:\n" +
-                    "$expression = $answerText"
-
-        calculatorDisplay.text =
-            "$expression = $answerText"
-
-        addHistory(
-            "$expression = $answerText"
+        addTitle(
+            "📚 История решений",
+            "Ваши последние расчёты"
         )
-    }
 
-    private fun clearCalculator() {
+        val content =
+            addScrollContent()
 
-        calculatorValue = ""
+        if (historyList.isEmpty()) {
 
-        firstNumber = 0.0
+            val empty =
+                makeResultText()
 
-        currentOperator = ""
+            empty.text =
+                "История пока пустая."
 
-        waitingForSecondNumber = false
+            content.addView(empty)
 
-        updateCalculatorDisplay()
-    }
-
-    private fun updateCalculatorDisplay() {
-
-        if (calculatorValue.isEmpty()) {
-
-            calculatorDisplay.text =
-                "0"
-
-        } else {
-
-            calculatorDisplay.text =
-                calculatorValue
+            return
         }
-    }
 
-    // =========================================================
-    // HISTORY
-    // =========================================================
+        historyList
+            .reversed()
+            .forEachIndexed { index, item ->
+
+                val card =
+                    makeResultText()
+
+                card.text =
+                    "${index + 1}. $item"
+
+                content.addView(card)
+            }
+    }
 
     private fun addHistory(
         text: String
     ) {
 
-        historyList.add(
-            0,
-            text
-        )
+        historyList.add(text)
 
-        if (historyList.size > 20) {
-            historyList.removeAt(
-                historyList.lastIndex
-            )
+        while (
+            historyList.size > 50
+        ) {
+
+            historyList.removeAt(0)
         }
 
         saveHistory()
-
-        updateHistoryView()
-    }
-
-    private fun updateHistoryView() {
-
-        if (historyList.isEmpty()) {
-
-            history.text =
-                "История пока пуста"
-
-            return
-        }
-
-        history.text =
-            historyList.joinToString(
-                separator = "\n\n"
-            ) { item ->
-                "• $item"
-            }
     }
 
     private fun saveHistory() {
 
-        val preferences =
-            getSharedPreferences(
-                "calculator",
-                MODE_PRIVATE
-            )
-
-        preferences.edit()
+        getPreferences(
+            MODE_PRIVATE
+        )
+            .edit()
             .putString(
                 "history",
-                historyList.joinToString("\n")
+                historyList.joinToString(
+                    "\n---ITEM---\n"
+                )
             )
             .apply()
     }
 
     private fun loadHistory() {
 
-        val preferences =
-            getSharedPreferences(
-                "calculator",
+        val saved =
+            getPreferences(
                 MODE_PRIVATE
             )
+                .getString(
+                    "history",
+                    ""
+                )
+                ?: ""
 
-        val saved =
-            preferences.getString(
-                "history",
-                ""
-            )
-
-        if (!saved.isNullOrEmpty()) {
+        if (saved.isNotEmpty()) {
 
             historyList.clear()
 
             historyList.addAll(
-                saved.lines()
-                    .filter { it.isNotBlank() }
+                saved.split(
+                    "\n---ITEM---\n"
+                )
             )
         }
-
-        updateHistoryView()
     }
 
     // =========================================================
-    // FORMAT
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     // =========================================================
 
     private fun formatNumber(
@@ -1587,26 +1583,40 @@ $explanation
     ): String {
 
         if (value.isNaN()) {
-            return "NaN"
+            return "Ошибка"
         }
 
         if (value.isInfinite()) {
             return "∞"
         }
 
-        if (value == value.toLong().toDouble()) {
+        return if (
+            value % 1.0 == 0.0
+        ) {
 
-            return value
+            value
                 .toLong()
                 .toString()
-        }
 
-        return String.format(
-            Locale.US,
-            "%.6f",
-            value
-        )
-            .trimEnd('0')
-            .trimEnd('.')
+        } else {
+
+            String.format(
+                Locale.US,
+                "%.8f",
+                value
+            )
+                .trimEnd('0')
+                .trimEnd('.')
+        }
+    }
+
+    private fun dp(
+        value: Int
+    ): Int {
+
+        return (
+            value *
+                resources.displayMetrics.density
+            ).toInt()
     }
 }
