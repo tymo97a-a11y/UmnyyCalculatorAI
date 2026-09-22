@@ -1,87 +1,53 @@
 package com.smartcalculator.ai
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import android.view.ViewGroup
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
-import java.util.Locale
 import kotlin.math.pow
 
 class MainActivity : AppCompatActivity() {
 
-    private val client = OkHttpClient()
-
     private val serverUrl =
-        "https://umnyy-calculator-ai-server.onrender.com/v1/calculate"
+        "https://umnyy-calculator-ai-server.onrender.com"
 
-    private val imageServerUrl =
-        "https://umnyy-calculator-ai-server.onrender.com/v1/calculate-image"
-
-    private lateinit var rootContainer: LinearLayout
-
-    private var selectedPhotoUri: Uri? = null
-
-    private var calculatorExpression = ""
-
-    private var firstNumber = 0.0
-
-    private var operator = ""
+    private val client = OkHttpClient()
 
     private val historyList = mutableListOf<String>()
 
-    private var currentGraphFunction: ((Double) -> Double)? = null
+    private lateinit var rootContainer: LinearLayout
 
-    private lateinit var graphView: GraphView
-
-    private val photoPicker =
-        registerForActivityResult(
-            ActivityResultContracts.GetContent()
-        ) { uri ->
-
-            if (uri != null) {
-                selectedPhotoUri = uri
-                openPhotoScreen(uri)
-            }
-        }
+    private val bgColor = Color.rgb(7, 11, 20)
+    private val cardColor = Color.rgb(17, 26, 43)
+    private val blueColor = Color.rgb(36, 107, 253)
+    private val textColor = Color.WHITE
+    private val secondaryColor = Color.rgb(180, 195, 215)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_main)
-
-        rootContainer =
-            findViewById<View>(R.id.menuAI).parent as LinearLayout
-
-        setupMainMenu()
-
         loadHistory()
+        showMainMenu()
     }
 
     // =========================================================
-    // ГЛАВНОЕ МЕНЮ
+    // ОСНОВНОЙ ЭКРАН
     // =========================================================
 
-    private fun setupMainMenu() {
+    private fun showMainMenu() {
+
+        setContentView(R.layout.activity_main)
 
         findViewById<View>(R.id.menuAI).setOnClickListener {
             openAIScreen()
@@ -96,7 +62,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.menuPhoto).setOnClickListener {
-            openPhotoScreen(null)
+            openPhotoScreen()
         }
 
         findViewById<View>(R.id.menuTable).setOnClickListener {
@@ -109,318 +75,117 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ОБЩИЕ ФУНКЦИИ
+    // ОБЩИЕ ЭЛЕМЕНТЫ
     // =========================================================
 
-    private fun clearScreen() {
+    private fun createRoot(): LinearLayout {
 
-        rootContainer.removeAllViews()
+        rootContainer = LinearLayout(this)
 
-        rootContainer.orientation =
-            LinearLayout.VERTICAL
+        rootContainer.orientation = LinearLayout.VERTICAL
+        rootContainer.setPadding(20, 20, 20, 30)
+        rootContainer.setBackgroundColor(bgColor)
 
-        rootContainer.setPadding(
-            dp(20),
-            dp(20),
-            dp(20),
-            dp(20)
-        )
-
-        rootContainer.setBackgroundColor(
-            Color.rgb(7, 11, 20)
-        )
+        return rootContainer
     }
 
-    private fun addBackButton() {
+    private fun setScreen(view: View) {
+
+        val scroll = ScrollView(this)
+
+        scroll.setBackgroundColor(bgColor)
+
+        scroll.addView(view)
+
+        setContentView(scroll)
+    }
+
+    private fun addBackButton(container: LinearLayout) {
 
         val button = Button(this)
 
         button.text = "← Назад"
 
-        button.setTextColor(Color.WHITE)
+        button.setTextColor(textColor)
+
+        button.setBackgroundColor(Color.TRANSPARENT)
 
         button.setOnClickListener {
-
-            setContentView(
-                R.layout.activity_main
-            )
-
-            rootContainer =
-                findViewById<View>(
-                    R.id.menuAI
-                ).parent as LinearLayout
-
-            setupMainMenu()
+            showMainMenu()
         }
 
-        rootContainer.addView(
+        container.addView(
             button,
             LinearLayout.LayoutParams(
-                -1,
-                dp(52)
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                60
             )
         )
     }
 
-    private fun addTitle(
-        title: String,
-        subtitle: String
-    ) {
+    private fun makeTitle(text: String): TextView {
 
-        val titleView = TextView(this)
+        return TextView(this).apply {
 
-        titleView.text = title
+            this.text = text
 
-        titleView.setTextColor(
-            Color.WHITE
-        )
+            setTextColor(textColor)
 
-        titleView.textSize = 27f
+            textSize = 24f
 
-        titleView.setTypeface(
-            null,
-            android.graphics.Typeface.BOLD
-        )
+            gravity = Gravity.CENTER
 
-        titleView.setPadding(
-            0,
-            dp(18),
-            0,
-            dp(5)
-        )
-
-        rootContainer.addView(
-            titleView
-        )
-
-        val subtitleView = TextView(this)
-
-        subtitleView.text = subtitle
-
-        subtitleView.setTextColor(
-            Color.rgb(145, 160, 184)
-        )
-
-        subtitleView.textSize = 14f
-
-        subtitleView.setPadding(
-            0,
-            0,
-            0,
-            dp(20)
-        )
-
-        rootContainer.addView(
-            subtitleView
-        )
+            setPadding(10, 20, 10, 20)
+        }
     }
 
-    private fun addScrollContent(): LinearLayout {
+    private fun makeCardTitle(text: String): TextView {
 
-        val scroll =
-            ScrollView(this)
+        return TextView(this).apply {
 
-        scroll.layoutParams =
-            LinearLayout.LayoutParams(
-                -1,
-                0,
-                1f
+            this.text = text
+
+            setTextColor(textColor)
+
+            textSize = 20f
+
+            setPadding(20, 20, 20, 10)
+        }
+    }
+
+    private fun makeCardText(text: String): TextView {
+
+        return TextView(this).apply {
+
+            this.text = text
+
+            setTextColor(secondaryColor)
+
+            textSize = 16f
+
+            setPadding(20, 5, 20, 20)
+        }
+    }
+
+    private fun makeCard(): LinearLayout {
+
+        return LinearLayout(this).apply {
+
+            orientation = LinearLayout.VERTICAL
+
+            setBackgroundColor(cardColor)
+
+            setPadding(5, 5, 5, 5)
+
+            val params = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             )
 
-        val content =
-            LinearLayout(this)
+            params.setMargins(0, 10, 0, 10)
 
-        content.orientation =
-            LinearLayout.VERTICAL
-
-        content.setPadding(
-            0,
-            0,
-            0,
-            dp(20)
-        )
-
-        scroll.addView(content)
-
-        rootContainer.addView(scroll)
-
-        return content
-    }
-
-    private fun makeEditText(
-        hint: String
-    ): EditText {
-
-        val editText =
-            EditText(this)
-
-        editText.hint = hint
-
-        editText.setHintTextColor(
-            Color.rgb(120, 135, 160)
-        )
-
-        editText.setTextColor(
-            Color.WHITE
-        )
-
-        editText.textSize = 17f
-
-        editText.setPadding(
-            dp(16),
-            dp(14),
-            dp(16),
-            dp(14)
-        )
-
-        editText.setBackgroundColor(
-            Color.rgb(17, 26, 43)
-        )
-
-        editText.layoutParams =
-            LinearLayout.LayoutParams(
-                -1,
-                dp(65)
-            ).apply {
-                bottomMargin = dp(12)
-            }
-
-        return editText
-    }
-
-    private fun makeButton(
-        text: String
-    ): Button {
-
-        val button =
-            Button(this)
-
-        button.text = text
-
-        button.textSize = 16f
-
-        button.setTextColor(
-            Color.WHITE
-        )
-
-        button.setBackgroundColor(
-            Color.rgb(36, 107, 253)
-        )
-
-        button.layoutParams =
-            LinearLayout.LayoutParams(
-                -1,
-                dp(58)
-            ).apply {
-                bottomMargin = dp(10)
-            }
-
-        return button
-    }
-
-    private fun makeResultText(): TextView {
-
-        val text =
-            TextView(this)
-
-        text.setTextColor(
-            Color.WHITE
-        )
-
-        text.textSize = 17f
-
-        text.setPadding(
-            dp(16),
-            dp(16),
-            dp(16),
-            dp(16)
-        )
-
-        text.setBackgroundColor(
-            Color.rgb(17, 26, 43)
-        )
-
-        text.layoutParams =
-            LinearLayout.LayoutParams(
-                -1,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = dp(10)
-                bottomMargin = dp(15)
-            }
-
-        return text
-    }
-
-    private fun makeCardTitle(
-        title: String
-    ): TextView {
-
-        val text =
-            TextView(this)
-
-        text.text = title
-
-        text.setTextColor(
-            Color.WHITE
-        )
-
-        text.textSize = 19f
-
-        text.setTypeface(
-            null,
-            android.graphics.Typeface.BOLD
-        )
-
-        text.setPadding(
-            dp(18),
-            dp(18),
-            dp(18),
-            dp(8)
-        )
-
-        text.setBackgroundColor(
-            Color.rgb(17, 26, 43)
-        )
-
-        return text
-    }
-
-    private fun makeCardText(
-        textValue: String
-    ): TextView {
-
-        val text =
-            TextView(this)
-
-        text.text = textValue
-
-        text.setTextColor(
-            Color.rgb(220, 231, 255)
-        )
-
-        text.textSize = 17f
-
-        text.setPadding(
-            dp(18),
-            dp(8),
-            dp(18),
-            dp(20)
-        )
-
-        text.setBackgroundColor(
-            Color.rgb(17, 26, 43)
-        )
-
-        text.layoutParams =
-            LinearLayout.LayoutParams(
-                -1,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = dp(12)
-            }
-
-        return text
+            layoutParams = params
+        }
     }
 
     // =========================================================
@@ -429,53 +194,59 @@ class MainActivity : AppCompatActivity() {
 
     private fun openAIScreen() {
 
-        clearScreen()
+        val root = createRoot()
 
-        addBackButton()
+        addBackButton(root)
 
-        addTitle(
-            "🤖 Рассчитать с AI",
-            "Опиши задачу обычными словами"
+        root.addView(
+            makeTitle("🤖 Рассчитать с AI")
         )
 
-        val content =
-            addScrollContent()
-
-        val input =
-            makeEditText(
-                "Например: 15% от 8400"
+        root.addView(
+            makeCardText(
+                "Опиши задачу обычными словами"
             )
-
-        input.minLines = 3
-
-        input.gravity =
-            Gravity.TOP
-
-        content.addView(input)
-
-        val calculateButton =
-            makeButton(
-                "🤖 Рассчитать с AI"
-            )
-
-        content.addView(
-            calculateButton
         )
 
-        val result =
-            makeResultText()
+        val input = EditText(this)
 
-        result.text =
-            "Здесь появится результат AI"
+        input.hint = "Например: 15% от 8400"
 
-        content.addView(result)
+        input.setTextColor(textColor)
 
-        calculateButton.setOnClickListener {
+        input.setHintTextColor(Color.GRAY)
 
-            val text =
-                input.text
-                    .toString()
-                    .trim()
+        input.setBackgroundColor(cardColor)
+
+        input.setPadding(20, 20, 20, 20)
+
+        root.addView(
+            input,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                150
+            )
+        )
+
+        val button = Button(this)
+
+        button.text = "🤖 Рассчитать с AI"
+
+        button.setTextColor(Color.WHITE)
+
+        button.setBackgroundColor(blueColor)
+
+        root.addView(
+            button,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                70
+            )
+        )
+
+        button.setOnClickListener {
+
+            val text = input.text.toString().trim()
 
             if (text.isEmpty()) {
 
@@ -488,125 +259,120 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            calculateButton.isEnabled =
-                false
-
-            result.text =
-                "⏳ AI решает задачу..."
-
-            sendToAI(
-                text,
-                result,
-                calculateButton
-            )
+            sendToAI(text)
         }
+
+        setScreen(root)
     }
 
-    private fun sendToAI(
-        text: String,
-        resultView: TextView,
-        button: Button
-    ) {
+    private fun sendToAI(text: String) {
 
-        val json =
-            JSONObject()
+        Toast.makeText(
+            this,
+            "AI решает задачу...",
+            Toast.LENGTH_SHORT
+        ).show()
 
-        json.put(
-            "text",
-            text
+        val json = JSONObject()
+
+        json.put("text", text)
+
+        val body = RequestBody.create(
+            MediaType.parse("application/json"),
+            json.toString()
         )
 
-        val body =
-            json.toString()
-                .toRequestBody(
-                    "application/json".toMediaType()
-                )
+        val request = Request.Builder()
+            .url("$serverUrl/v1/calculate")
+            .post(body)
+            .build()
 
-        val request =
-            Request.Builder()
-                .url(serverUrl)
-                .post(body)
-                .build()
+        client.newCall(request).enqueue(
 
-        client.newCall(request)
-            .enqueue(
-                object : Callback {
+            object : Callback {
 
-                    override fun onFailure(
-                        call: Call,
-                        e: IOException
-                    ) {
+                override fun onFailure(
+                    call: Call,
+                    e: IOException
+                ) {
+
+                    runOnUiThread {
+
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Ошибка подключения к AI",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+                override fun onResponse(
+                    call: Call,
+                    response: Response
+                ) {
+
+                    val responseText =
+                        response.body()?.string() ?: ""
+
+                    if (!response.isSuccessful) {
 
                         runOnUiThread {
 
-                            button.isEnabled =
-                                true
-
-                            resultView.text =
-                                "❌ Ошибка соединения\n\n${e.message}"
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Ошибка сервера: ${response.code}",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
+
+                        return
                     }
 
-                    override fun onResponse(
-                        call: Call,
-                        response: okhttp3.Response
-                    ) {
+                    try {
 
-                        val responseText =
-                            response.body?.string()
-                                ?: ""
+                        val jsonResponse =
+                            JSONObject(responseText)
+
+                        val answer =
+                            jsonResponse.optString(
+                                "result",
+                                "Ответ не получен"
+                            )
+
+                        val explanation =
+                            jsonResponse.optString(
+                                "explanation",
+                                ""
+                            )
+
+                        addHistory(
+                            text,
+                            answer
+                        )
 
                         runOnUiThread {
 
-                            button.isEnabled =
-                                true
+                            openAIResultScreen(
+                                text,
+                                answer,
+                                explanation
+                            )
+                        }
 
-                            if (!response.isSuccessful) {
+                    } catch (e: Exception) {
 
-                                resultView.text =
-                                    "❌ Ошибка сервера ${response.code}\n\n$responseText"
+                        runOnUiThread {
 
-                                return@runOnUiThread
-                            }
-
-                            try {
-
-                                val jsonResponse =
-                                    JSONObject(
-                                        responseText
-                                    )
-
-                                val answer =
-                                    jsonResponse.optString(
-                                        "result",
-                                        "Нет результата"
-                                    )
-
-                                val explanation =
-                                    jsonResponse.optString(
-                                        "explanation",
-                                        ""
-                                    )
-
-                                addHistory(
-                                    "$text\n→ $answer"
-                                )
-
-                                openAIResultScreen(
-                                    text,
-                                    answer,
-                                    explanation
-                                )
-
-                            } catch (e: Exception) {
-
-                                resultView.text =
-                                    responseText
-                            }
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Не удалось обработать ответ AI",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
                 }
-            )
+            }
+        )
     }
 
     // =========================================================
@@ -619,125 +385,341 @@ class MainActivity : AppCompatActivity() {
         explanation: String
     ) {
 
-        clearScreen()
+        val root = createRoot()
 
-        addBackButton()
+        addBackButton(root)
 
-        addTitle(
-            "🤖 Результат",
-            "Умный калькулятор AI"
+        root.addView(
+            makeTitle("🤖 Результат AI")
         )
 
-        val content =
-            addScrollContent()
+        // -------------------------
+        // ЗАДАЧА
+        // -------------------------
 
-        // Задача
-        content.addView(
-            makeCardTitle(
-                "📝 Задача"
-            )
+        val taskCard = makeCard()
+
+        taskCard.addView(
+            makeCardTitle("📝 Задача")
         )
 
-        content.addView(
+        taskCard.addView(
+            makeCardText(task)
+        )
+
+        root.addView(taskCard)
+
+        // -------------------------
+        // ОТВЕТ
+        // -------------------------
+
+        val answerCard = makeCard()
+
+        answerCard.addView(
+            makeCardTitle("✅ ОТВЕТ")
+        )
+
+        val answerText = TextView(this)
+
+        answerText.text = answer
+
+        answerText.setTextColor(Color.WHITE)
+
+        answerText.textSize = 28f
+
+        answerText.gravity = Gravity.CENTER
+
+        answerText.setPadding(
+            20,
+            20,
+            20,
+            30
+        )
+
+        answerCard.addView(answerText)
+
+        root.addView(answerCard)
+
+        // -------------------------
+        // ПОШАГОВОЕ РЕШЕНИЕ
+        // -------------------------
+
+        val explanationCard = makeCard()
+
+        explanationCard.addView(
+            makeCardTitle("📚 Пошаговое решение")
+        )
+
+        explanationCard.addView(
             makeCardText(
-                task
-            )
-        )
-
-        // Ответ
-        content.addView(
-            makeCardTitle(
-                "✅ ОТВЕТ"
-            )
-        )
-
-        val answerText =
-            makeCardText(
-                answer
-            )
-
-        answerText.textSize = 24f
-
-        answerText.setTypeface(
-            null,
-            android.graphics.Typeface.BOLD
-        )
-
-        answerText.setTextColor(
-            Color.WHITE
-        )
-
-        content.addView(
-            answerText
-        )
-
-        // Объяснение
-        content.addView(
-            makeCardTitle(
-                "📚 Пошаговое решение"
-            )
-        )
-
-        val explanationText =
-            makeCardText(
-                if (explanation.isBlank())
-                    "AI не предоставил дополнительного объяснения."
-                else
+                if (explanation.isBlank()) {
+                    "AI не предоставил дополнительное объяснение."
+                } else {
                     explanation
+                }
             )
-
-        content.addView(
-            explanationText
         )
 
-        // График
-        val graphFunction =
-            parseFunction(task)
+        root.addView(explanationCard)
 
-        if (graphFunction != null) {
+        // =====================================================
+        // АВТОМАТИЧЕСКИЙ ГРАФИК И ТАБЛИЦА
+        // =====================================================
 
-            val graphButton =
-                makeButton(
-                    "📈 Построить график"
+        val function = parseFunction(task)
+
+        if (function != null) {
+
+            // -------------------------
+            // ГРАФИК
+            // -------------------------
+
+            val graphCard = makeCard()
+
+            graphCard.addView(
+                makeCardTitle(
+                    "📈 График функции"
                 )
-
-            content.addView(
-                graphButton
             )
 
-            graphButton.setOnClickListener {
-
-                openGraphScreen(task)
-            }
-
-            val tableButton =
-                makeButton(
-                    "📊 Открыть таблицу"
+            graphCard.addView(
+                makeCardText(
+                    "График построен автоматически из задачи AI."
                 )
-
-            content.addView(
-                tableButton
             )
 
-            tableButton.setOnClickListener {
+            val graphView = GraphView(this)
 
-                openTableScreen(task)
-            }
+            graphView.setFunction(function)
+
+            graphCard.addView(
+                graphView,
+                LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    650
+                )
+            )
+
+            root.addView(graphCard)
+
+            // -------------------------
+            // ТАБЛИЦА
+            // -------------------------
+
+            val tableCard = makeCard()
+
+            tableCard.addView(
+                makeCardTitle(
+                    "📊 Таблица значений"
+                )
+            )
+
+            tableCard.addView(
+                makeCardText(
+                    "Таблица рассчитана автоматически."
+                )
+            )
+
+            val table = createFunctionTable(
+                function
+            )
+
+            tableCard.addView(table)
+
+            root.addView(tableCard)
+
+        } else {
+
+            // Если это обычная задача,
+            // график и таблица не нужны.
+
+            val infoCard = makeCard()
+
+            infoCard.addView(
+                makeCardTitle(
+                    "💡 Подсказка"
+                )
+            )
+
+            infoCard.addView(
+                makeCardText(
+                    "Если в задаче есть функция, например:\n\n" +
+                            "y = x²\n" +
+                            "y = 2x + 5\n" +
+                            "y = x² - 4x + 3\n\n" +
+                            "приложение автоматически построит график " +
+                            "и таблицу значений."
+                )
+            )
+
+            root.addView(infoCard)
         }
 
-        // Повторить
-        val repeatButton =
-            makeButton(
-                "🤖 Решить новую задачу"
-            )
+        // -------------------------
+        // НОВАЯ ЗАДАЧА
+        // -------------------------
 
-        content.addView(
-            repeatButton
+        val newTaskButton = Button(this)
+
+        newTaskButton.text = "🤖 Решить новую задачу"
+
+        newTaskButton.setTextColor(Color.WHITE)
+
+        newTaskButton.setBackgroundColor(
+            blueColor
         )
 
-        repeatButton.setOnClickListener {
+        val newTaskParams = LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            75
+        )
+
+        newTaskParams.setMargins(
+            0,
+            20,
+            0,
+            20
+        )
+
+        root.addView(
+            newTaskButton,
+            newTaskParams
+        )
+
+        newTaskButton.setOnClickListener {
 
             openAIScreen()
+        }
+
+        setScreen(root)
+    }
+
+    // =========================================================
+    // ТАБЛИЦА ФУНКЦИИ
+    // =========================================================
+
+    private fun createFunctionTable(
+        function: (Double) -> Double
+    ): TableLayout {
+
+        val table = TableLayout(this)
+
+        table.setPadding(
+            10,
+            10,
+            10,
+            20
+        )
+
+        table.setStretchAllColumns(true)
+
+        addTableRow(
+            table,
+            "x",
+            "y"
+        )
+
+        for (i in -5..5) {
+
+            val x = i.toDouble()
+
+            val y = try {
+
+                function(x)
+
+            } catch (_: Exception) {
+
+                Double.NaN
+            }
+
+            val yText =
+                if (y.isFinite()) {
+
+                    formatNumber(y)
+
+                } else {
+
+                    "—"
+                }
+
+            addTableRow(
+                table,
+                formatNumber(x),
+                yText
+            )
+        }
+
+        return table
+    }
+
+    private fun addTableRow(
+        table: TableLayout,
+        first: String,
+        second: String
+    ) {
+
+        val row = TableRow(this)
+
+        val firstText = TextView(this)
+
+        firstText.text = first
+
+        firstText.setTextColor(Color.WHITE)
+
+        firstText.textSize = 17f
+
+        firstText.gravity = Gravity.CENTER
+
+        firstText.setPadding(
+            10,
+            15,
+            10,
+            15
+        )
+
+        val secondText = TextView(this)
+
+        secondText.text = second
+
+        secondText.setTextColor(Color.WHITE)
+
+        secondText.textSize = 17f
+
+        secondText.gravity = Gravity.CENTER
+
+        secondText.setPadding(
+            10,
+            15,
+            10,
+            15
+        )
+
+        row.addView(firstText)
+
+        row.addView(secondText)
+
+        table.addView(row)
+    }
+
+    private fun formatNumber(
+        number: Double
+    ): String {
+
+        if (!number.isFinite()) {
+            return "—"
+        }
+
+        return if (number % 1.0 == 0.0) {
+
+            number.toLong().toString()
+
+        } else {
+
+            String.format(
+                java.util.Locale.US,
+                "%.2f",
+                number
+            )
         }
     }
 
@@ -747,136 +729,115 @@ class MainActivity : AppCompatActivity() {
 
     private fun openCalculatorScreen() {
 
-        clearScreen()
+        val root = createRoot()
 
-        addBackButton()
+        addBackButton(root)
 
-        addTitle(
-            "🧮 Калькулятор",
-            "Обычные математические расчёты"
+        root.addView(
+            makeTitle("🧮 Калькулятор")
         )
 
-        val display =
-            TextView(this)
+        val display = TextView(this)
 
         display.text = "0"
 
-        display.setTextColor(
-            Color.WHITE
-        )
+        display.setTextColor(Color.WHITE)
 
-        display.textSize = 30f
+        display.textSize = 32f
 
-        display.gravity =
-            Gravity.CENTER_VERTICAL or
-                    Gravity.END
+        display.gravity = Gravity.RIGHT or Gravity.CENTER_VERTICAL
 
         display.setPadding(
-            dp(16),
-            0,
-            dp(16),
-            0
+            20,
+            20,
+            20,
+            20
         )
 
-        display.setBackgroundColor(
-            Color.rgb(17, 26, 43)
-        )
+        display.setBackgroundColor(cardColor)
 
-        rootContainer.addView(
+        root.addView(
             display,
             LinearLayout.LayoutParams(
-                -1,
-                dp(75)
-            ).apply {
-                bottomMargin = dp(12)
-            }
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                100
+            )
         )
 
-        val grid =
-            android.widget.GridLayout(
-                this
-            )
+        val grid = GridLayout(this)
 
         grid.columnCount = 4
 
-        rootContainer.addView(
-            grid,
-            LinearLayout.LayoutParams(
-                -1,
-                0,
-                1f
-            )
+        val buttons = arrayOf(
+            "AC", "⌫", "%", "÷",
+            "(", ")", "×", "−",
+            "7", "8", "9", "+",
+            "4", "5", "6", "=",
+            "1", "2", "3", ".",
+            "0"
         )
 
-        val buttons =
-            listOf(
-                "AC", "⌫", "%", "÷",
-                "7", "8", "9", "×",
-                "4", "5", "6", "−",
-                "1", "2", "3", "+",
-                "0", ".", "="
-            )
+        for (text in buttons) {
 
-        for (value in buttons) {
+            val button = Button(this)
 
-            val button =
-                Button(this)
+            button.text = text
 
-            button.text = value
+            button.setTextColor(Color.WHITE)
 
             button.textSize = 20f
 
-            button.setTextColor(
-                Color.WHITE
-            )
-
             if (
-                value == "÷" ||
-                value == "×" ||
-                value == "−" ||
-                value == "+" ||
-                value == "="
+                text == "+" ||
+                text == "−" ||
+                text == "×" ||
+                text == "÷" ||
+                text == "=" ||
+                text == "%" ||
+                text == "AC"
             ) {
 
-                button.setBackgroundColor(
-                    Color.rgb(36, 107, 253)
+                button.setBackgroundResource(
+                    com.smartcalculator.ai.R.drawable.button_operator
                 )
 
             } else {
 
-                button.setBackgroundColor(
-                    Color.rgb(17, 26, 43)
+                button.setBackgroundResource(
+                    com.smartcalculator.ai.R.drawable.button_number
                 )
             }
 
-            val params =
-                android.widget.GridLayout.LayoutParams()
+            val params = GridLayout.LayoutParams()
 
             params.width = 0
 
-            params.height = dp(65)
+            params.height = 85
 
             params.columnSpec =
-                android.widget.GridLayout.spec(
-                    android.widget.GridLayout.UNDEFINED,
-                    1f
-                )
+                if (text == "0") {
+
+                    GridLayout.spec(
+                        GridLayout.UNDEFINED,
+                        2,
+                        1f
+                    )
+
+                } else {
+
+                    GridLayout.spec(
+                        GridLayout.UNDEFINED,
+                        1,
+                        1f
+                    )
+                }
 
             params.setMargins(
-                dp(4),
-                dp(4),
-                dp(4),
-                dp(4)
+                5,
+                5,
+                5,
+                5
             )
-
-            if (value == "0") {
-
-                params.columnSpec =
-                    android.widget.GridLayout.spec(
-                        android.widget.GridLayout.UNDEFINED,
-                        2
-                    )
-            }
 
             grid.addView(
                 button,
@@ -885,174 +846,183 @@ class MainActivity : AppCompatActivity() {
 
             button.setOnClickListener {
 
-                calculatorButton(
-                    value,
-                    display
-                )
+                when (text) {
+
+                    "AC" -> {
+                        display.text = "0"
+                    }
+
+                    "⌫" -> {
+
+                        val value =
+                            display.text.toString()
+
+                        display.text =
+                            if (value.length <= 1) {
+                                "0"
+                            } else {
+                                value.dropLast(1)
+                            }
+                    }
+
+                    "=" -> {
+
+                        val expression =
+                            display.text.toString()
+
+                        val result =
+                            calculateExpression(
+                                expression
+                            )
+
+                        display.text = result
+                    }
+
+                    else -> {
+
+                        if (display.text == "0") {
+
+                            display.text = text
+
+                        } else {
+
+                            display.append(text)
+                        }
+                    }
+                }
             }
+        }
+
+        root.addView(grid)
+
+        setScreen(root)
+    }
+
+    // =========================================================
+    // ПРОСТОЙ ВЫЧИСЛИТЕЛЬ
+    // =========================================================
+
+    private fun calculateExpression(
+        expression: String
+    ): String {
+
+        return try {
+
+            val clean =
+                expression
+                    .replace("×", "*")
+                    .replace("÷", "/")
+                    .replace("−", "-")
+
+            evaluateSimpleExpression(clean)
+
+        } catch (_: Exception) {
+
+            "Ошибка"
         }
     }
 
-    private fun calculatorButton(
-        value: String,
-        display: TextView
-    ) {
+    private fun evaluateSimpleExpression(
+        expression: String
+    ): String {
 
-        if (value == "AC") {
+        val tokens = mutableListOf<String>()
 
-            calculatorExpression = ""
+        var current = ""
 
-            firstNumber = 0.0
-
-            operator = ""
-
-            display.text = "0"
-
-            return
-        }
-
-        if (value == "⌫") {
+        for (char in expression) {
 
             if (
-                calculatorExpression.isNotEmpty()
+                char.isDigit() ||
+                char == '.'
             ) {
 
-                calculatorExpression =
-                    calculatorExpression.dropLast(1)
+                current += char
 
-                display.text =
-                    if (
-                        calculatorExpression.isEmpty()
-                    )
-                        "0"
-                    else
-                        calculatorExpression
+            } else {
+
+                if (current.isNotEmpty()) {
+
+                    tokens.add(current)
+
+                    current = ""
+                }
+
+                tokens.add(char.toString())
             }
-
-            return
         }
 
-        if (
-            value == "+" ||
-            value == "−" ||
-            value == "×" ||
-            value == "÷"
-        ) {
+        if (current.isNotEmpty()) {
 
-            if (
-                calculatorExpression.isNotEmpty()
-            ) {
-
-                firstNumber =
-                    calculatorExpression
-                        .toDoubleOrNull()
-                        ?: 0.0
-
-                operator = value
-
-                calculatorExpression = ""
-            }
-
-            return
+            tokens.add(current)
         }
 
-        if (value == "=") {
+        if (tokens.isEmpty()) {
 
-            val second =
-                calculatorExpression
-                    .toDoubleOrNull()
+            return "0"
+        }
 
-            if (
-                second != null &&
-                operator.isNotEmpty()
-            ) {
+        // Сначала умножение и деление
 
-                val answer =
-                    when (operator) {
+        var i = 1
 
-                        "+" ->
-                            firstNumber + second
+        while (i < tokens.size - 1) {
 
-                        "−" ->
-                            firstNumber - second
+            val op = tokens[i]
 
-                        "×" ->
-                            firstNumber * second
+            if (op == "*" || op == "/") {
 
-                        "÷" ->
-                            if (second == 0.0)
-                                Double.NaN
-                            else
-                                firstNumber / second
+                val left =
+                    tokens[i - 1].toDouble()
 
-                        else ->
-                            second
+                val right =
+                    tokens[i + 1].toDouble()
+
+                val value =
+                    if (op == "*") {
+                        left * right
+                    } else {
+                        left / right
                     }
 
-                val formatted =
-                    formatNumber(
-                        answer
-                    )
+                tokens[i - 1] =
+                    value.toString()
 
-                display.text =
-                    formatted
+                tokens.removeAt(i)
 
-                addHistory(
-                    "$firstNumber $operator $second = $formatted"
-                )
+                tokens.removeAt(i)
 
-                calculatorExpression =
-                    formatted
+            } else {
 
-                operator = ""
+                i += 2
             }
-
-            return
         }
 
-        if (value == "%") {
+        var result =
+            tokens[0].toDouble()
+
+        i = 1
+
+        while (i < tokens.size - 1) {
+
+            val op = tokens[i]
 
             val number =
-                calculatorExpression
-                    .toDoubleOrNull()
+                tokens[i + 1].toDouble()
 
-            if (number != null) {
+            if (op == "+") {
 
-                val answer =
-                    number / 100.0
+                result += number
 
-                calculatorExpression =
-                    formatNumber(answer)
+            } else if (op == "-") {
 
-                display.text =
-                    calculatorExpression
+                result -= number
             }
 
-            return
+            i += 2
         }
 
-        if (value == ".") {
-
-            if (
-                !calculatorExpression.contains(".")
-            ) {
-
-                calculatorExpression +=
-                    if (
-                        calculatorExpression.isEmpty()
-                    )
-                        "0."
-                    else
-                        "."
-            }
-
-        } else {
-
-            calculatorExpression += value
-        }
-
-        display.text =
-            calculatorExpression
+        return formatNumber(result)
     }
 
     // =========================================================
@@ -1063,116 +1033,91 @@ class MainActivity : AppCompatActivity() {
         prefill: String? = null
     ) {
 
-        clearScreen()
+        val root = createRoot()
 
-        addBackButton()
+        addBackButton(root)
 
-        addTitle(
-            "📈 График функции",
-            "Введите функцию и постройте график"
+        root.addView(
+            makeTitle("📈 График функции")
         )
 
-        val content =
-            addScrollContent()
+        val input = EditText(this)
 
-        val input =
-            makeEditText(
-                "Например: y = x^2 - 4x + 3"
-            )
+        input.hint =
+            "Например: y = x² - 4x + 3"
+
+        input.setTextColor(Color.WHITE)
+
+        input.setHintTextColor(Color.GRAY)
+
+        input.setBackgroundColor(cardColor)
+
+        input.setPadding(
+            20,
+            20,
+            20,
+            20
+        )
 
         if (!prefill.isNullOrBlank()) {
+
             input.setText(prefill)
         }
 
-        content.addView(input)
-
-        val graphButton =
-            makeButton(
-                "📈 Построить график"
+        root.addView(
+            input,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                130
             )
-
-        content.addView(
-            graphButton
         )
 
-        graphView =
-            GraphView(this)
+        val button = Button(this)
 
-        graphView.setBackgroundColor(
-            Color.rgb(14, 23, 40)
+        button.text = "📈 Построить график"
+
+        button.setTextColor(Color.WHITE)
+
+        button.setBackgroundColor(blueColor)
+
+        root.addView(
+            button,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                70
+            )
         )
 
-        content.addView(
+        val graphView = GraphView(this)
+
+        root.addView(
             graphView,
             LinearLayout.LayoutParams(
-                -1,
-                dp(380)
-            ).apply {
-                bottomMargin = dp(12)
-            }
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                650
+            )
         )
 
-        val info =
-            makeResultText()
-
-        info.text =
-            "Введите функцию и нажмите «Построить график»"
-
-        content.addView(info)
-
-        graphButton.setOnClickListener {
+        button.setOnClickListener {
 
             val text =
-                input.text
-                    .toString()
-                    .trim()
-
-            if (text.isEmpty()) {
-
-                Toast.makeText(
-                    this,
-                    "Введите функцию",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                return@setOnClickListener
-            }
+                input.text.toString()
 
             val function =
                 parseFunction(text)
 
             if (function == null) {
 
-                info.text =
-                    """
-                    ❌ Не удалось распознать функцию.
+                Toast.makeText(
+                    this,
+                    "Не удалось распознать функцию",
+                    Toast.LENGTH_SHORT
+                ).show()
 
-                    Попробуйте:
+            } else {
 
-                    y = x^2
-                    y = x^2 - 4x + 3
-                    y = 2x + 5
-                    x^2 - 9
-                    """.trimIndent()
-
-                graphView.clearGraph()
-
-                return@setOnClickListener
+                graphView.setFunction(function)
             }
-
-            currentGraphFunction =
-                function
-
-            graphView.setFunction(
-                function,
-                -10.0,
-                10.0,
-                -10.0,
-                10.0
-            )
-
-            info.text =
-                "✅ График построен\n\nФункция: $text"
         }
 
         if (!prefill.isNullOrBlank()) {
@@ -1182,21 +1127,11 @@ class MainActivity : AppCompatActivity() {
 
             if (function != null) {
 
-                currentGraphFunction =
-                    function
-
-                graphView.setFunction(
-                    function,
-                    -10.0,
-                    10.0,
-                    -10.0,
-                    10.0
-                )
-
-                info.text =
-                    "✅ График построен\n\nФункция: $prefill"
+                graphView.setFunction(function)
             }
         }
+
+        setScreen(root)
     }
 
     // =========================================================
@@ -1207,32 +1142,41 @@ class MainActivity : AppCompatActivity() {
         original: String
     ): ((Double) -> Double)? {
 
-        var text =
-            original
-                .lowercase(Locale.getDefault())
-                .replace(" ", "")
+        var expression =
+            original.trim()
+                .lowercase()
                 .replace("²", "^2")
                 .replace("−", "-")
                 .replace("×", "*")
 
-        if (text.startsWith("y=")) {
-            text =
-                text.substring(2)
+        if (expression.isEmpty()) {
+            return null
         }
 
-        if (text.startsWith("f(x)=")) {
-            text =
-                text.substring(5)
+        expression =
+            expression
+                .replace("y=", "")
+                .replace("y =", "")
+                .replace("f(x)=", "")
+                .replace("f(x) =", "")
+                .trim()
+
+        if (expression.endsWith("=0")) {
+
+            expression =
+                expression.dropLast(2)
         }
 
-        if (text.endsWith("=0")) {
-            text =
-                text.dropLast(2)
-        }
+        expression =
+            expression.replace(" ", "")
+
+        // -----------------------------------------------------
+        // y = x^2
+        // -----------------------------------------------------
 
         if (
-            text == "x^2" ||
-            text == "x*x"
+            expression == "x^2" ||
+            expression == "x**2"
         ) {
 
             return { x ->
@@ -1240,27 +1184,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        if (text == "x") {
-
-            return { x ->
-                x
-            }
-        }
-
-        if (text == "-x") {
-
-            return { x ->
-                -x
-            }
-        }
+        // -----------------------------------------------------
+        // x^2 - 4x + 3
+        // -----------------------------------------------------
 
         val quadratic =
             Regex(
-                """^([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d*)x([+-]\d*\.?\d+)?$"""
+                """([+-]?\d*\.?\d*)x\^2([+-]?\d*\.?\d*)x([+-]?\d*\.?\d*)"""
             )
 
         val quadraticMatch =
-            quadratic.matchEntire(text)
+            quadratic.matchEntire(expression)
 
         if (quadraticMatch != null) {
 
@@ -1277,42 +1211,74 @@ class MainActivity : AppCompatActivity() {
                 when (aText) {
                     "", "+" -> 1.0
                     "-" -> -1.0
-                    else ->
-                        aText.toDoubleOrNull()
-                            ?: return null
+                    else -> aText.toDouble()
                 }
 
             val b =
                 when (bText) {
                     "", "+" -> 1.0
                     "-" -> -1.0
-                    else ->
-                        bText.toDoubleOrNull()
-                            ?: return null
+                    else -> bText.toDouble()
                 }
 
             val c =
-                if (cText.isEmpty())
+                if (cText.isBlank()) {
                     0.0
-                else
-                    cText.toDoubleOrNull()
-                        ?: return null
+                } else {
+                    cText.toDouble()
+                }
 
             return { x ->
-
-                a * x * x +
-                        b * x +
-                        c
+                a * x.pow(2) + b * x + c
             }
         }
 
+        // -----------------------------------------------------
+        // x^2 - 9
+        // -----------------------------------------------------
+
+        val quadraticSimple =
+            Regex(
+                """([+-]?\d*\.?\d*)x\^2([+-]\d*\.?\d+)"""
+            )
+
+        val simpleMatch =
+            quadraticSimple.matchEntire(expression)
+
+        if (simpleMatch != null) {
+
+            val aText =
+                simpleMatch.groupValues[1]
+
+            val cText =
+                simpleMatch.groupValues[2]
+
+            val a =
+                when (aText) {
+                    "", "+" -> 1.0
+                    "-" -> -1.0
+                    else -> aText.toDouble()
+                }
+
+            val c =
+                cText.toDouble()
+
+            return { x ->
+                a * x.pow(2) + c
+            }
+        }
+
+        // -----------------------------------------------------
+        // 2x + 5
+        // -----------------------------------------------------
+
         val linear =
             Regex(
-                """^([+-]?\d*\.?\d*)x([+-]\d*\.?\d+)?$"""
+                """([+-]?\d*\.?\d*)x([+-]\d*\.?\d+)?"""
             )
 
         val linearMatch =
-            linear.matchEntire(text)
+            linear.matchEntire(expression)
 
         if (linearMatch != null) {
 
@@ -1326,349 +1292,22 @@ class MainActivity : AppCompatActivity() {
                 when (aText) {
                     "", "+" -> 1.0
                     "-" -> -1.0
-                    else ->
-                        aText.toDoubleOrNull()
-                            ?: return null
+                    else -> aText.toDouble()
                 }
 
             val b =
-                if (bText.isEmpty())
+                if (bText.isBlank()) {
                     0.0
-                else
-                    bText.toDoubleOrNull()
-                        ?: return null
+                } else {
+                    bText.toDouble()
+                }
 
             return { x ->
                 a * x + b
             }
         }
 
-        return createSimpleFunction(text)
-    }
-
-    private fun createSimpleFunction(
-        text: String
-    ): ((Double) -> Double)? {
-
-        if (!text.contains("x")) {
-
-            val number =
-                text.toDoubleOrNull()
-                    ?: return null
-
-            return {
-                number
-            }
-        }
-
-        return { x ->
-
-            try {
-
-                val expression =
-                    text
-                        .replace(
-                            "x^2",
-                            "${x * x}"
-                        )
-                        .replace(
-                            "x",
-                            "($x)"
-                        )
-
-                evaluateExpression(
-                    expression
-                )
-
-            } catch (_: Exception) {
-
-                Double.NaN
-            }
-        }
-    }
-
-    private fun evaluateExpression(
-        expression: String
-    ): Double {
-
-        val parts =
-            expression.split(
-                Regex("(?=[+-])")
-            )
-
-        var result = 0.0
-
-        for (part in parts) {
-
-            if (part.isBlank()) {
-                continue
-            }
-
-            result +=
-                part.toDouble()
-        }
-
-        return result
-    }
-
-    // =========================================================
-    // ФОТО
-    // =========================================================
-
-    private fun openPhotoScreen(
-        uri: Uri?
-    ) {
-
-        clearScreen()
-
-        addBackButton()
-
-        addTitle(
-            "📷 Решить по фото",
-            "Сфотографируй или выбери математическую задачу"
-        )
-
-        val content =
-            addScrollContent()
-
-        val chooseButton =
-            makeButton(
-                "📷 Выбрать фото"
-            )
-
-        content.addView(
-            chooseButton
-        )
-
-        val preview =
-            ImageView(this)
-
-        preview.adjustViewBounds =
-            true
-
-        preview.setPadding(
-            dp(5),
-            dp(5),
-            dp(5),
-            dp(5)
-        )
-
-        content.addView(
-            preview,
-            LinearLayout.LayoutParams(
-                -1,
-                dp(280)
-            ).apply {
-                bottomMargin = dp(10)
-            }
-        )
-
-        val result =
-            makeResultText()
-
-        result.text =
-            "Выберите фотографию задачи"
-
-        content.addView(result)
-
-        chooseButton.setOnClickListener {
-
-            photoPicker.launch(
-                "image/*"
-            )
-        }
-
-        if (uri != null) {
-
-            preview.setImageURI(uri)
-
-            result.text =
-                "⏳ Распознавание задачи..."
-
-            sendPhotoToAI(
-                uri,
-                result
-            )
-        }
-    }
-
-    private fun sendPhotoToAI(
-        uri: Uri,
-        resultView: TextView
-    ) {
-
-        try {
-
-            val inputStream =
-                contentResolver
-                    .openInputStream(uri)
-                    ?: throw IOException(
-                        "Не удалось открыть изображение"
-                    )
-
-            val bytes =
-                inputStream.use {
-                    it.readBytes()
-                }
-
-            val fileName =
-                getFileName(uri)
-
-            val imageBody =
-                bytes.toRequestBody(
-                    "image/jpeg".toMediaType()
-                )
-
-            val multipart =
-                MultipartBody.Builder()
-                    .setType(
-                        MultipartBody.FORM
-                    )
-                    .addFormDataPart(
-                        "file",
-                        fileName,
-                        imageBody
-                    )
-                    .build()
-
-            val request =
-                Request.Builder()
-                    .url(imageServerUrl)
-                    .post(multipart)
-                    .build()
-
-            client.newCall(request)
-                .enqueue(
-                    object : Callback {
-
-                        override fun onFailure(
-                            call: Call,
-                            e: IOException
-                        ) {
-
-                            runOnUiThread {
-
-                                resultView.text =
-                                    "❌ Ошибка соединения\n\n${e.message}"
-                            }
-                        }
-
-                        override fun onResponse(
-                            call: Call,
-                            response: okhttp3.Response
-                        ) {
-
-                            val responseText =
-                                response.body?.string()
-                                    ?: ""
-
-                            runOnUiThread {
-
-                                if (!response.isSuccessful) {
-
-                                    resultView.text =
-                                        "❌ Ошибка ${response.code}\n\n$responseText"
-
-                                    return@runOnUiThread
-                                }
-
-                                try {
-
-                                    val json =
-                                        JSONObject(
-                                            responseText
-                                        )
-
-                                    val recognized =
-                                        json.optString(
-                                            "recognized",
-                                            ""
-                                        )
-
-                                    val answer =
-                                        json.optString(
-                                            "result",
-                                            ""
-                                        )
-
-                                    val explanation =
-                                        json.optString(
-                                            "explanation",
-                                            ""
-                                        )
-
-                                    resultView.text =
-                                        """
-                                        📝 РАСПОЗНАНО:
-
-                                        $recognized
-
-                                        ✅ ИТОГ:
-
-                                        $answer
-
-                                        💡 ОБЪЯСНЕНИЕ:
-
-                                        $explanation
-                                        """.trimIndent()
-
-                                    addHistory(
-                                        "📷 $recognized\n→ $answer"
-                                    )
-
-                                } catch (
-                                    e: Exception
-                                ) {
-
-                                    resultView.text =
-                                        responseText
-                                }
-                            }
-                        }
-                    }
-                )
-
-        } catch (e: Exception) {
-
-            resultView.text =
-                "❌ Не удалось отправить фото\n\n${e.message}"
-        }
-    }
-
-    private fun getFileName(
-        uri: Uri
-    ): String {
-
-        var name =
-            "photo.jpg"
-
-        val cursor =
-            contentResolver.query(
-                uri,
-                null,
-                null,
-                null,
-                null
-            )
-
-        cursor?.use {
-
-            val index =
-                it.getColumnIndex(
-                    OpenableColumns.DISPLAY_NAME
-                )
-
-            if (
-                index >= 0 &&
-                it.moveToFirst()
-            ) {
-
-                name =
-                    it.getString(index)
-            }
-        }
-
-        return name
+        return null
     }
 
     // =========================================================
@@ -1679,45 +1318,65 @@ class MainActivity : AppCompatActivity() {
         prefill: String? = null
     ) {
 
-        clearScreen()
+        val root = createRoot()
 
-        addBackButton()
+        addBackButton(root)
 
-        addTitle(
-            "📊 Таблица значений",
-            "Значения выбранной функции"
+        root.addView(
+            makeTitle("📊 Таблица значений")
         )
 
-        val content =
-            addScrollContent()
+        val input = EditText(this)
 
-        val input =
-            makeEditText(
-                "Например: y = x^2 - 4x + 3"
-            )
+        input.hint =
+            "Например: y = x²"
+
+        input.setTextColor(Color.WHITE)
+
+        input.setHintTextColor(Color.GRAY)
+
+        input.setBackgroundColor(cardColor)
 
         if (!prefill.isNullOrBlank()) {
+
             input.setText(prefill)
         }
 
-        content.addView(input)
-
-        val button =
-            makeButton(
-                "📊 Построить таблицу"
+        root.addView(
+            input,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                120
             )
+        )
 
-        content.addView(button)
+        val button = Button(this)
 
-        val table =
-            makeResultText()
+        button.text = "📊 Создать таблицу"
 
-        table.text =
-            "Введите функцию"
+        button.setTextColor(Color.WHITE)
 
-        content.addView(table)
+        button.setBackgroundColor(blueColor)
+
+        root.addView(
+            button,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                70
+            )
+        )
+
+        val tableContainer =
+            LinearLayout(this)
+
+        tableContainer.orientation =
+            LinearLayout.VERTICAL
+
+        root.addView(tableContainer)
 
         button.setOnClickListener {
+
+            tableContainer.removeAllViews()
 
             val function =
                 parseFunction(
@@ -1726,42 +1385,19 @@ class MainActivity : AppCompatActivity() {
 
             if (function == null) {
 
-                table.text =
-                    "❌ Не удалось распознать функцию"
+                Toast.makeText(
+                    this,
+                    "Не удалось распознать функцию",
+                    Toast.LENGTH_SHORT
+                ).show()
 
                 return@setOnClickListener
             }
 
-            val builder =
-                StringBuilder()
+            val table =
+                createFunctionTable(function)
 
-            builder.append(
-                "      X              Y\n"
-            )
-
-            builder.append(
-                "-------------------------\n"
-            )
-
-            for (x in -5..5) {
-
-                val y =
-                    function(
-                        x.toDouble()
-                    )
-
-                builder.append(
-                    String.format(
-                        Locale.US,
-                        "%7d     %10.3f\n",
-                        x,
-                        y
-                    )
-                )
-            }
-
-            table.text =
-                builder.toString()
+            tableContainer.addView(table)
         }
 
         if (!prefill.isNullOrBlank()) {
@@ -1771,37 +1407,251 @@ class MainActivity : AppCompatActivity() {
 
             if (function != null) {
 
-                val builder =
-                    StringBuilder()
-
-                builder.append(
-                    "      X              Y\n"
+                tableContainer.addView(
+                    createFunctionTable(function)
                 )
-
-                builder.append(
-                    "-------------------------\n"
-                )
-
-                for (x in -5..5) {
-
-                    val y =
-                        function(
-                            x.toDouble()
-                        )
-
-                    builder.append(
-                        String.format(
-                            Locale.US,
-                            "%7d     %10.3f\n",
-                            x,
-                            y
-                        )
-                    )
-                }
-
-                table.text =
-                    builder.toString()
             }
+        }
+
+        setScreen(root)
+    }
+
+    // =========================================================
+    // ФОТО
+    // =========================================================
+
+    private fun openPhotoScreen() {
+
+        val root = createRoot()
+
+        addBackButton(root)
+
+        root.addView(
+            makeTitle("📷 Решить по фото")
+        )
+
+        root.addView(
+            makeCardText(
+                "Сфотографируй пример или выбери изображение."
+            )
+        )
+
+        val button = Button(this)
+
+        button.text = "📷 Выбрать фото"
+
+        button.setTextColor(Color.WHITE)
+
+        button.setBackgroundColor(blueColor)
+
+        root.addView(
+            button,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                80
+            )
+        )
+
+        val resultText = TextView(this)
+
+        resultText.setTextColor(Color.WHITE)
+
+        resultText.textSize = 18f
+
+        resultText.setPadding(
+            20,
+            30,
+            20,
+            30
+        )
+
+        root.addView(resultText)
+
+        button.setOnClickListener {
+
+            val intent =
+                Intent(Intent.ACTION_GET_CONTENT)
+
+            intent.type = "image/*"
+
+            startActivityForResult(
+                intent,
+                1001
+            )
+        }
+
+        setScreen(root)
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+
+        super.onActivityResult(
+            requestCode,
+            resultCode,
+            data
+        )
+
+        if (
+            requestCode == 1001 &&
+            resultCode == Activity.RESULT_OK
+        ) {
+
+            val uri =
+                data?.data ?: return
+
+            uploadPhoto(uri)
+        }
+    }
+
+    private fun uploadPhoto(uri: Uri) {
+
+        Toast.makeText(
+            this,
+            "AI анализирует фото...",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        try {
+
+            val inputStream =
+                contentResolver.openInputStream(uri)
+                    ?: return
+
+            val bytes =
+                inputStream.readBytes()
+
+            inputStream.close()
+
+            val requestBody =
+                RequestBody.create(
+                    MediaType.parse("image/*"),
+                    bytes
+                )
+
+            val multipart =
+                MultipartBody.Builder()
+                    .setType(
+                        MultipartBody.FORM
+                    )
+                    .addFormDataPart(
+                        "file",
+                        "photo.jpg",
+                        requestBody
+                    )
+                    .build()
+
+            val request =
+                Request.Builder()
+                    .url(
+                        "$serverUrl/v1/calculate-image"
+                    )
+                    .post(multipart)
+                    .build()
+
+            client.newCall(request).enqueue(
+
+                object : Callback {
+
+                    override fun onFailure(
+                        call: Call,
+                        e: IOException
+                    ) {
+
+                        runOnUiThread {
+
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Ошибка загрузки фото",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+
+                    override fun onResponse(
+                        call: Call,
+                        response: Response
+                    ) {
+
+                        val responseText =
+                            response.body()?.string()
+                                ?: ""
+
+                        if (!response.isSuccessful) {
+
+                            runOnUiThread {
+
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Ошибка сервера: ${response.code}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+
+                            return
+                        }
+
+                        try {
+
+                            val json =
+                                JSONObject(responseText)
+
+                            val recognized =
+                                json.optString(
+                                    "recognized",
+                                    ""
+                                )
+
+                            val result =
+                                json.optString(
+                                    "result",
+                                    ""
+                                )
+
+                            val explanation =
+                                json.optString(
+                                    "explanation",
+                                    ""
+                                )
+
+                            runOnUiThread {
+
+                                openAIResultScreen(
+                                    if (recognized.isBlank()) {
+                                        "Задача по фото"
+                                    } else {
+                                        recognized
+                                    },
+                                    result,
+                                    explanation
+                                )
+                            }
+
+                        } catch (_: Exception) {
+
+                            runOnUiThread {
+
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Ошибка обработки ответа",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    }
+                }
+            )
+
+        } catch (_: Exception) {
+
+            Toast.makeText(
+                this,
+                "Не удалось прочитать фото",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -1809,56 +1659,16 @@ class MainActivity : AppCompatActivity() {
     // ИСТОРИЯ
     // =========================================================
 
-    private fun openHistoryScreen() {
-
-        clearScreen()
-
-        addBackButton()
-
-        addTitle(
-            "📚 История решений",
-            "Ваши последние расчёты"
-        )
-
-        val content =
-            addScrollContent()
-
-        if (historyList.isEmpty()) {
-
-            val empty =
-                makeResultText()
-
-            empty.text =
-                "История пока пустая."
-
-            content.addView(empty)
-
-            return
-        }
-
-        historyList
-            .reversed()
-            .forEachIndexed { index, item ->
-
-                val card =
-                    makeResultText()
-
-                card.text =
-                    "${index + 1}. $item"
-
-                content.addView(card)
-            }
-    }
-
     private fun addHistory(
-        text: String
+        task: String,
+        answer: String
     ) {
 
-        historyList.add(text)
+        historyList.add(
+            "$task\nОтвет: $answer"
+        )
 
-        while (
-            historyList.size > 50
-        ) {
+        if (historyList.size > 50) {
 
             historyList.removeAt(0)
         }
@@ -1868,14 +1678,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun saveHistory() {
 
-        getPreferences(
-            MODE_PRIVATE
-        )
-            .edit()
+        val prefs =
+            getSharedPreferences(
+                "calculator",
+                Context.MODE_PRIVATE
+            )
+
+        prefs.edit()
             .putString(
                 "history",
                 historyList.joinToString(
-                    "\n---ITEM---\n"
+                    "\n---\n"
                 )
             )
             .apply()
@@ -1883,71 +1696,88 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadHistory() {
 
-        val saved =
-            getPreferences(
-                MODE_PRIVATE
+        val prefs =
+            getSharedPreferences(
+                "calculator",
+                Context.MODE_PRIVATE
             )
-                .getString(
-                    "history",
-                    ""
-                )
-                ?: ""
 
-        if (saved.isNotEmpty()) {
+        val history =
+            prefs.getString(
+                "history",
+                ""
+            ) ?: ""
+
+        if (history.isNotBlank()) {
 
             historyList.clear()
 
             historyList.addAll(
-                saved.split(
-                    "\n---ITEM---\n"
-                )
+                history.split("\n---\n")
             )
         }
     }
 
-    // =========================================================
-    // ВСПОМОГАТЕЛЬНОЕ
-    // =========================================================
+    private fun openHistoryScreen() {
 
-    private fun formatNumber(
-        value: Double
-    ): String {
+        val root = createRoot()
 
-        if (value.isNaN()) {
-            return "Ошибка"
-        }
+        addBackButton(root)
 
-        if (value.isInfinite()) {
-            return "∞"
-        }
+        root.addView(
+            makeTitle("📚 История решений")
+        )
 
-        return if (
-            value % 1.0 == 0.0
-        ) {
+        if (historyList.isEmpty()) {
 
-            value
-                .toLong()
-                .toString()
+            root.addView(
+                makeCardText(
+                    "История пока пустая."
+                )
+            )
 
         } else {
 
-            String.format(
-                Locale.US,
-                "%.8f",
-                value
-            )
-                .trimEnd('0')
-                .trimEnd('.')
+            historyList
+                .asReversed()
+                .forEach { item ->
+
+                    val card = makeCard()
+
+                    card.addView(
+                        makeCardText(item)
+                    )
+
+                    root.addView(card)
+                }
         }
-    }
 
-    private fun dp(
-        value: Int
-    ): Int {
+        val clearButton = Button(this)
 
-        return (
-            value *
-                resources.displayMetrics.density
-            ).toInt()
+        clearButton.text =
+            "🗑 Очистить историю"
+
+        clearButton.setTextColor(Color.WHITE)
+
+        clearButton.setBackgroundColor(blueColor)
+
+        root.addView(
+            clearButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                70
+            )
+        )
+
+        clearButton.setOnClickListener {
+
+            historyList.clear()
+
+            saveHistory()
+
+            openHistoryScreen()
+        }
+
+        setScreen(root)
     }
 }
