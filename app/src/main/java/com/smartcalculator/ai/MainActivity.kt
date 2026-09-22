@@ -6,15 +6,29 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.GridLayout
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TableLayout
+import android.widget.TableRow
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import okhttp3.*
-import org.json.JSONObject
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import java.io.IOException
+import java.util.Locale
 import kotlin.math.pow
 
 class MainActivity : AppCompatActivity() {
@@ -25,8 +39,6 @@ class MainActivity : AppCompatActivity() {
     private val client = OkHttpClient()
 
     private val historyList = mutableListOf<String>()
-
-    private lateinit var rootContainer: LinearLayout
 
     private val bgColor = Color.rgb(7, 11, 20)
     private val cardColor = Color.rgb(17, 26, 43)
@@ -42,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ОСНОВНОЙ ЭКРАН
+    // ГЛАВНОЕ МЕНЮ
     // =========================================================
 
     private fun showMainMenu() {
@@ -80,13 +92,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun createRoot(): LinearLayout {
 
-        rootContainer = LinearLayout(this)
+        return LinearLayout(this).apply {
 
-        rootContainer.orientation = LinearLayout.VERTICAL
-        rootContainer.setPadding(20, 20, 20, 30)
-        rootContainer.setBackgroundColor(bgColor)
+            orientation = LinearLayout.VERTICAL
 
-        return rootContainer
+            setPadding(
+                20,
+                20,
+                20,
+                30
+            )
+
+            setBackgroundColor(bgColor)
+        }
     }
 
     private fun setScreen(view: View) {
@@ -100,7 +118,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(scroll)
     }
 
-    private fun addBackButton(container: LinearLayout) {
+    private fun addBackButton(
+        container: LinearLayout
+    ) {
 
         val button = Button(this)
 
@@ -123,7 +143,9 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun makeTitle(text: String): TextView {
+    private fun makeTitle(
+        text: String
+    ): TextView {
 
         return TextView(this).apply {
 
@@ -135,11 +157,18 @@ class MainActivity : AppCompatActivity() {
 
             gravity = Gravity.CENTER
 
-            setPadding(10, 20, 10, 20)
+            setPadding(
+                10,
+                20,
+                10,
+                20
+            )
         }
     }
 
-    private fun makeCardTitle(text: String): TextView {
+    private fun makeCardTitle(
+        text: String
+    ): TextView {
 
         return TextView(this).apply {
 
@@ -149,11 +178,18 @@ class MainActivity : AppCompatActivity() {
 
             textSize = 20f
 
-            setPadding(20, 20, 20, 10)
+            setPadding(
+                20,
+                20,
+                20,
+                10
+            )
         }
     }
 
-    private fun makeCardText(text: String): TextView {
+    private fun makeCardText(
+        text: String
+    ): TextView {
 
         return TextView(this).apply {
 
@@ -163,7 +199,12 @@ class MainActivity : AppCompatActivity() {
 
             textSize = 16f
 
-            setPadding(20, 5, 20, 20)
+            setPadding(
+                20,
+                5,
+                20,
+                20
+            )
         }
     }
 
@@ -175,21 +216,31 @@ class MainActivity : AppCompatActivity() {
 
             setBackgroundColor(cardColor)
 
-            setPadding(5, 5, 5, 5)
+            setPadding(
+                5,
+                5,
+                5,
+                5
+            )
 
             val params = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
 
-            params.setMargins(0, 10, 0, 10)
+            params.setMargins(
+                0,
+                10,
+                0,
+                10
+            )
 
             layoutParams = params
         }
     }
 
     // =========================================================
-    // AI
+    // AI ЭКРАН
     // =========================================================
 
     private fun openAIScreen() {
@@ -210,7 +261,8 @@ class MainActivity : AppCompatActivity() {
 
         val input = EditText(this)
 
-        input.hint = "Например: 15% от 8400"
+        input.hint =
+            "Например: 15% от 8400"
 
         input.setTextColor(textColor)
 
@@ -218,7 +270,12 @@ class MainActivity : AppCompatActivity() {
 
         input.setBackgroundColor(cardColor)
 
-        input.setPadding(20, 20, 20, 20)
+        input.setPadding(
+            20,
+            20,
+            20,
+            20
+        )
 
         root.addView(
             input,
@@ -230,7 +287,8 @@ class MainActivity : AppCompatActivity() {
 
         val button = Button(this)
 
-        button.text = "🤖 Рассчитать с AI"
+        button.text =
+            "🤖 Рассчитать с AI"
 
         button.setTextColor(Color.WHITE)
 
@@ -246,7 +304,8 @@ class MainActivity : AppCompatActivity() {
 
         button.setOnClickListener {
 
-            val text = input.text.toString().trim()
+            val text =
+                input.text.toString().trim()
 
             if (text.isEmpty()) {
 
@@ -265,7 +324,13 @@ class MainActivity : AppCompatActivity() {
         setScreen(root)
     }
 
-    private fun sendToAI(text: String) {
+    // =========================================================
+    // ОТПРАВКА В AI
+    // =========================================================
+
+    private fun sendToAI(
+        text: String
+    ) {
 
         Toast.makeText(
             this,
@@ -273,22 +338,27 @@ class MainActivity : AppCompatActivity() {
             Toast.LENGTH_SHORT
         ).show()
 
-        val json = JSONObject()
+        val json = org.json.JSONObject()
 
-        json.put("text", text)
-
-        val body = RequestBody.create(
-            MediaType.parse("application/json"),
-            json.toString()
+        json.put(
+            "text",
+            text
         )
 
-        val request = Request.Builder()
-            .url("$serverUrl/v1/calculate")
-            .post(body)
-            .build()
+        val body =
+            json.toString().toRequestBody(
+                "application/json".toMediaType()
+            )
+
+        val request =
+            Request.Builder()
+                .url(
+                    "$serverUrl/v1/calculate"
+                )
+                .post(body)
+                .build()
 
         client.newCall(request).enqueue(
-
             object : Callback {
 
                 override fun onFailure(
@@ -312,7 +382,8 @@ class MainActivity : AppCompatActivity() {
                 ) {
 
                     val responseText =
-                        response.body()?.string() ?: ""
+                        response.body?.string()
+                            ?: ""
 
                     if (!response.isSuccessful) {
 
@@ -331,7 +402,9 @@ class MainActivity : AppCompatActivity() {
                     try {
 
                         val jsonResponse =
-                            JSONObject(responseText)
+                            org.json.JSONObject(
+                                responseText
+                            )
 
                         val answer =
                             jsonResponse.optString(
@@ -359,7 +432,7 @@ class MainActivity : AppCompatActivity() {
                             )
                         }
 
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
 
                         runOnUiThread {
 
@@ -376,7 +449,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // НОВЫЙ ЭКРАН РЕЗУЛЬТАТА AI
+    // ЭКРАН РЕЗУЛЬТАТА AI
     // =========================================================
 
     private fun openAIResultScreen(
@@ -393,9 +466,9 @@ class MainActivity : AppCompatActivity() {
             makeTitle("🤖 Результат AI")
         )
 
-        // -------------------------
+        // -----------------------------------------------------
         // ЗАДАЧА
-        // -------------------------
+        // -----------------------------------------------------
 
         val taskCard = makeCard()
 
@@ -409,9 +482,9 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(taskCard)
 
-        // -------------------------
+        // -----------------------------------------------------
         // ОТВЕТ
-        // -------------------------
+        // -----------------------------------------------------
 
         val answerCard = makeCard()
 
@@ -440,14 +513,16 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(answerCard)
 
-        // -------------------------
+        // -----------------------------------------------------
         // ПОШАГОВОЕ РЕШЕНИЕ
-        // -------------------------
+        // -----------------------------------------------------
 
         val explanationCard = makeCard()
 
         explanationCard.addView(
-            makeCardTitle("📚 Пошаговое решение")
+            makeCardTitle(
+                "📚 Пошаговое решение"
+            )
         )
 
         explanationCard.addView(
@@ -462,17 +537,18 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(explanationCard)
 
-        // =====================================================
+        // -----------------------------------------------------
         // АВТОМАТИЧЕСКИЙ ГРАФИК И ТАБЛИЦА
-        // =====================================================
+        // -----------------------------------------------------
 
-        val function = parseFunction(task)
+        val function =
+            parseFunction(task)
 
         if (function != null) {
 
-            // -------------------------
+            // =================================================
             // ГРАФИК
-            // -------------------------
+            // =================================================
 
             val graphCard = makeCard()
 
@@ -484,13 +560,16 @@ class MainActivity : AppCompatActivity() {
 
             graphCard.addView(
                 makeCardText(
-                    "График построен автоматически из задачи AI."
+                    "График построен автоматически."
                 )
             )
 
-            val graphView = GraphView(this)
+            val graphView =
+                GraphView(this)
 
-            graphView.setFunction(function)
+            graphView.setFunction(
+                function
+            )
 
             graphCard.addView(
                 graphView,
@@ -502,9 +581,9 @@ class MainActivity : AppCompatActivity() {
 
             root.addView(graphCard)
 
-            // -------------------------
+            // =================================================
             // ТАБЛИЦА
-            // -------------------------
+            // =================================================
 
             val tableCard = makeCard()
 
@@ -520,18 +599,14 @@ class MainActivity : AppCompatActivity() {
                 )
             )
 
-            val table = createFunctionTable(
-                function
-            )
+            val table =
+                createFunctionTable(function)
 
             tableCard.addView(table)
 
             root.addView(tableCard)
 
         } else {
-
-            // Если это обычная задача,
-            // график и таблица не нужны.
 
             val infoCard = makeCard()
 
@@ -543,38 +618,42 @@ class MainActivity : AppCompatActivity() {
 
             infoCard.addView(
                 makeCardText(
-                    "Если в задаче есть функция, например:\n\n" +
+                    "Для автоматического графика и таблицы " +
+                            "используй функцию, например:\n\n" +
                             "y = x²\n" +
                             "y = 2x + 5\n" +
-                            "y = x² - 4x + 3\n\n" +
-                            "приложение автоматически построит график " +
-                            "и таблицу значений."
+                            "y = x² - 4x + 3"
                 )
             )
 
             root.addView(infoCard)
         }
 
-        // -------------------------
+        // -----------------------------------------------------
         // НОВАЯ ЗАДАЧА
-        // -------------------------
+        // -----------------------------------------------------
 
-        val newTaskButton = Button(this)
+        val newTaskButton =
+            Button(this)
 
-        newTaskButton.text = "🤖 Решить новую задачу"
+        newTaskButton.text =
+            "🤖 Решить новую задачу"
 
-        newTaskButton.setTextColor(Color.WHITE)
+        newTaskButton.setTextColor(
+            Color.WHITE
+        )
 
         newTaskButton.setBackgroundColor(
             blueColor
         )
 
-        val newTaskParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            75
-        )
+        val params =
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                75
+            )
 
-        newTaskParams.setMargins(
+        params.setMargins(
             0,
             20,
             0,
@@ -583,11 +662,10 @@ class MainActivity : AppCompatActivity() {
 
         root.addView(
             newTaskButton,
-            newTaskParams
+            params
         )
 
         newTaskButton.setOnClickListener {
-
             openAIScreen()
         }
 
@@ -595,14 +673,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ТАБЛИЦА ФУНКЦИИ
+    // ТАБЛИЦА
     // =========================================================
 
     private fun createFunctionTable(
         function: (Double) -> Double
     ): TableLayout {
 
-        val table = TableLayout(this)
+        val table =
+            TableLayout(this)
 
         table.setPadding(
             10,
@@ -621,24 +700,20 @@ class MainActivity : AppCompatActivity() {
 
         for (i in -5..5) {
 
-            val x = i.toDouble()
+            val x =
+                i.toDouble()
 
-            val y = try {
-
-                function(x)
-
-            } catch (_: Exception) {
-
-                Double.NaN
-            }
+            val y =
+                try {
+                    function(x)
+                } catch (_: Exception) {
+                    Double.NaN
+                }
 
             val yText =
                 if (y.isFinite()) {
-
                     formatNumber(y)
-
                 } else {
-
                     "—"
                 }
 
@@ -658,17 +733,22 @@ class MainActivity : AppCompatActivity() {
         second: String
     ) {
 
-        val row = TableRow(this)
+        val row =
+            TableRow(this)
 
-        val firstText = TextView(this)
+        val firstText =
+            TextView(this)
 
         firstText.text = first
 
-        firstText.setTextColor(Color.WHITE)
+        firstText.setTextColor(
+            Color.WHITE
+        )
 
         firstText.textSize = 17f
 
-        firstText.gravity = Gravity.CENTER
+        firstText.gravity =
+            Gravity.CENTER
 
         firstText.setPadding(
             10,
@@ -677,15 +757,19 @@ class MainActivity : AppCompatActivity() {
             15
         )
 
-        val secondText = TextView(this)
+        val secondText =
+            TextView(this)
 
         secondText.text = second
 
-        secondText.setTextColor(Color.WHITE)
+        secondText.setTextColor(
+            Color.WHITE
+        )
 
         secondText.textSize = 17f
 
-        secondText.gravity = Gravity.CENTER
+        secondText.gravity =
+            Gravity.CENTER
 
         secondText.setPadding(
             10,
@@ -709,14 +793,16 @@ class MainActivity : AppCompatActivity() {
             return "—"
         }
 
-        return if (number % 1.0 == 0.0) {
+        return if (
+            number % 1.0 == 0.0
+        ) {
 
             number.toLong().toString()
 
         } else {
 
             String.format(
-                java.util.Locale.US,
+                Locale.US,
                 "%.2f",
                 number
             )
@@ -729,23 +815,31 @@ class MainActivity : AppCompatActivity() {
 
     private fun openCalculatorScreen() {
 
-        val root = createRoot()
+        val root =
+            createRoot()
 
         addBackButton(root)
 
         root.addView(
-            makeTitle("🧮 Калькулятор")
+            makeTitle(
+                "🧮 Калькулятор"
+            )
         )
 
-        val display = TextView(this)
+        val display =
+            TextView(this)
 
         display.text = "0"
 
-        display.setTextColor(Color.WHITE)
+        display.setTextColor(
+            Color.WHITE
+        )
 
         display.textSize = 32f
 
-        display.gravity = Gravity.RIGHT or Gravity.CENTER_VERTICAL
+        display.gravity =
+            Gravity.RIGHT or
+                    Gravity.CENTER_VERTICAL
 
         display.setPadding(
             20,
@@ -754,7 +848,9 @@ class MainActivity : AppCompatActivity() {
             20
         )
 
-        display.setBackgroundColor(cardColor)
+        display.setBackgroundColor(
+            cardColor
+        )
 
         root.addView(
             display,
@@ -764,26 +860,45 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val grid = GridLayout(this)
+        val grid =
+            GridLayout(this)
 
         grid.columnCount = 4
 
         val buttons = arrayOf(
-            "AC", "⌫", "%", "÷",
-            "(", ")", "×", "−",
-            "7", "8", "9", "+",
-            "4", "5", "6", "=",
-            "1", "2", "3", ".",
+            "AC",
+            "⌫",
+            "%",
+            "÷",
+            "(",
+            ")",
+            "×",
+            "−",
+            "7",
+            "8",
+            "9",
+            "+",
+            "4",
+            "5",
+            "6",
+            "=",
+            "1",
+            "2",
+            "3",
+            ".",
             "0"
         )
 
         for (text in buttons) {
 
-            val button = Button(this)
+            val button =
+                Button(this)
 
             button.text = text
 
-            button.setTextColor(Color.WHITE)
+            button.setTextColor(
+                Color.WHITE
+            )
 
             button.textSize = 20f
 
@@ -798,17 +913,18 @@ class MainActivity : AppCompatActivity() {
             ) {
 
                 button.setBackgroundResource(
-                    com.smartcalculator.ai.R.drawable.button_operator
+                    R.drawable.button_operator
                 )
 
             } else {
 
                 button.setBackgroundResource(
-                    com.smartcalculator.ai.R.drawable.button_number
+                    R.drawable.button_number
                 )
             }
 
-            val params = GridLayout.LayoutParams()
+            val params =
+                GridLayout.LayoutParams()
 
             params.width = 0
 
@@ -849,7 +965,9 @@ class MainActivity : AppCompatActivity() {
                 when (text) {
 
                     "AC" -> {
-                        display.text = "0"
+
+                        display.text =
+                            "0"
                     }
 
                     "⌫" -> {
@@ -858,7 +976,9 @@ class MainActivity : AppCompatActivity() {
                             display.text.toString()
 
                         display.text =
-                            if (value.length <= 1) {
+                            if (
+                                value.length <= 1
+                            ) {
                                 "0"
                             } else {
                                 value.dropLast(1)
@@ -870,19 +990,20 @@ class MainActivity : AppCompatActivity() {
                         val expression =
                             display.text.toString()
 
-                        val result =
+                        display.text =
                             calculateExpression(
                                 expression
                             )
-
-                        display.text = result
                     }
 
                     else -> {
 
-                        if (display.text == "0") {
+                        if (
+                            display.text == "0"
+                        ) {
 
-                            display.text = text
+                            display.text =
+                                text
 
                         } else {
 
@@ -899,7 +1020,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ПРОСТОЙ ВЫЧИСЛИТЕЛЬ
+    // ВЫЧИСЛЕНИЕ
     // =========================================================
 
     private fun calculateExpression(
@@ -914,7 +1035,9 @@ class MainActivity : AppCompatActivity() {
                     .replace("÷", "/")
                     .replace("−", "-")
 
-            evaluateSimpleExpression(clean)
+            evaluateSimpleExpression(
+                clean
+            )
 
         } catch (_: Exception) {
 
@@ -926,7 +1049,8 @@ class MainActivity : AppCompatActivity() {
         expression: String
     ): String {
 
-        val tokens = mutableListOf<String>()
+        val tokens =
+            mutableListOf<String>()
 
         var current = ""
 
@@ -948,7 +1072,9 @@ class MainActivity : AppCompatActivity() {
                     current = ""
                 }
 
-                tokens.add(char.toString())
+                tokens.add(
+                    char.toString()
+                )
             }
         }
 
@@ -962,21 +1088,29 @@ class MainActivity : AppCompatActivity() {
             return "0"
         }
 
-        // Сначала умножение и деление
+        // Умножение и деление
 
         var i = 1
 
-        while (i < tokens.size - 1) {
+        while (
+            i < tokens.size - 1
+        ) {
 
-            val op = tokens[i]
+            val op =
+                tokens[i]
 
-            if (op == "*" || op == "/") {
+            if (
+                op == "*" ||
+                op == "/"
+            ) {
 
                 val left =
-                    tokens[i - 1].toDouble()
+                    tokens[i - 1]
+                        .toDouble()
 
                 val right =
-                    tokens[i + 1].toDouble()
+                    tokens[i + 1]
+                        .toDouble()
 
                 val value =
                     if (op == "*") {
@@ -1003,20 +1137,25 @@ class MainActivity : AppCompatActivity() {
 
         i = 1
 
-        while (i < tokens.size - 1) {
+        while (
+            i < tokens.size - 1
+        ) {
 
-            val op = tokens[i]
+            val op =
+                tokens[i]
 
             val number =
                 tokens[i + 1].toDouble()
 
-            if (op == "+") {
+            when (op) {
 
-                result += number
+                "+" -> {
+                    result += number
+                }
 
-            } else if (op == "-") {
-
-                result -= number
+                "-" -> {
+                    result -= number
+                }
             }
 
             i += 2
@@ -1033,24 +1172,34 @@ class MainActivity : AppCompatActivity() {
         prefill: String? = null
     ) {
 
-        val root = createRoot()
+        val root =
+            createRoot()
 
         addBackButton(root)
 
         root.addView(
-            makeTitle("📈 График функции")
+            makeTitle(
+                "📈 График функции"
+            )
         )
 
-        val input = EditText(this)
+        val input =
+            EditText(this)
 
         input.hint =
             "Например: y = x² - 4x + 3"
 
-        input.setTextColor(Color.WHITE)
+        input.setTextColor(
+            Color.WHITE
+        )
 
-        input.setHintTextColor(Color.GRAY)
+        input.setHintTextColor(
+            Color.GRAY
+        )
 
-        input.setBackgroundColor(cardColor)
+        input.setBackgroundColor(
+            cardColor
+        )
 
         input.setPadding(
             20,
@@ -1059,7 +1208,9 @@ class MainActivity : AppCompatActivity() {
             20
         )
 
-        if (!prefill.isNullOrBlank()) {
+        if (
+            !prefill.isNullOrBlank()
+        ) {
 
             input.setText(prefill)
         }
@@ -1072,13 +1223,19 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val button = Button(this)
+        val button =
+            Button(this)
 
-        button.text = "📈 Построить график"
+        button.text =
+            "📈 Построить график"
 
-        button.setTextColor(Color.WHITE)
+        button.setTextColor(
+            Color.WHITE
+        )
 
-        button.setBackgroundColor(blueColor)
+        button.setBackgroundColor(
+            blueColor
+        )
 
         root.addView(
             button,
@@ -1088,7 +1245,8 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val graphView = GraphView(this)
+        val graphView =
+            GraphView(this)
 
         root.addView(
             graphView,
@@ -1100,11 +1258,10 @@ class MainActivity : AppCompatActivity() {
 
         button.setOnClickListener {
 
-            val text =
-                input.text.toString()
-
             val function =
-                parseFunction(text)
+                parseFunction(
+                    input.text.toString()
+                )
 
             if (function == null) {
 
@@ -1116,18 +1273,24 @@ class MainActivity : AppCompatActivity() {
 
             } else {
 
-                graphView.setFunction(function)
+                graphView.setFunction(
+                    function
+                )
             }
         }
 
-        if (!prefill.isNullOrBlank()) {
+        if (
+            !prefill.isNullOrBlank()
+        ) {
 
             val function =
                 parseFunction(prefill)
 
             if (function != null) {
 
-                graphView.setFunction(function)
+                graphView.setFunction(
+                    function
+                )
             }
         }
 
@@ -1143,7 +1306,8 @@ class MainActivity : AppCompatActivity() {
     ): ((Double) -> Double)? {
 
         var expression =
-            original.trim()
+            original
+                .trim()
                 .lowercase()
                 .replace("²", "^2")
                 .replace("−", "-")
@@ -1161,17 +1325,22 @@ class MainActivity : AppCompatActivity() {
                 .replace("f(x) =", "")
                 .trim()
 
-        if (expression.endsWith("=0")) {
+        if (
+            expression.endsWith("=0")
+        ) {
 
             expression =
                 expression.dropLast(2)
         }
 
         expression =
-            expression.replace(" ", "")
+            expression.replace(
+                " ",
+                ""
+            )
 
         // -----------------------------------------------------
-        // y = x^2
+        // x^2
         // -----------------------------------------------------
 
         if (
@@ -1194,42 +1363,64 @@ class MainActivity : AppCompatActivity() {
             )
 
         val quadraticMatch =
-            quadratic.matchEntire(expression)
+            quadratic.matchEntire(
+                expression
+            )
 
-        if (quadraticMatch != null) {
+        if (
+            quadraticMatch != null
+        ) {
 
             val aText =
-                quadraticMatch.groupValues[1]
+                quadraticMatch
+                    .groupValues[1]
 
             val bText =
-                quadraticMatch.groupValues[2]
+                quadraticMatch
+                    .groupValues[2]
 
             val cText =
-                quadraticMatch.groupValues[3]
+                quadraticMatch
+                    .groupValues[3]
 
             val a =
                 when (aText) {
-                    "", "+" -> 1.0
+
+                    "",
+                    "+" -> 1.0
+
                     "-" -> -1.0
-                    else -> aText.toDouble()
+
+                    else ->
+                        aText.toDouble()
                 }
 
             val b =
                 when (bText) {
-                    "", "+" -> 1.0
+
+                    "",
+                    "+" -> 1.0
+
                     "-" -> -1.0
-                    else -> bText.toDouble()
+
+                    else ->
+                        bText.toDouble()
                 }
 
             val c =
-                if (cText.isBlank()) {
+                if (
+                    cText.isBlank()
+                ) {
                     0.0
                 } else {
                     cText.toDouble()
                 }
 
             return { x ->
-                a * x.pow(2) + b * x + c
+
+                a * x.pow(2) +
+                        b * x +
+                        c
             }
         }
 
@@ -1243,28 +1434,41 @@ class MainActivity : AppCompatActivity() {
             )
 
         val simpleMatch =
-            quadraticSimple.matchEntire(expression)
+            quadraticSimple.matchEntire(
+                expression
+            )
 
-        if (simpleMatch != null) {
+        if (
+            simpleMatch != null
+        ) {
 
             val aText =
-                simpleMatch.groupValues[1]
+                simpleMatch
+                    .groupValues[1]
 
             val cText =
-                simpleMatch.groupValues[2]
+                simpleMatch
+                    .groupValues[2]
 
             val a =
                 when (aText) {
-                    "", "+" -> 1.0
+
+                    "",
+                    "+" -> 1.0
+
                     "-" -> -1.0
-                    else -> aText.toDouble()
+
+                    else ->
+                        aText.toDouble()
                 }
 
             val c =
                 cText.toDouble()
 
             return { x ->
-                a * x.pow(2) + c
+
+                a * x.pow(2) +
+                        c
             }
         }
 
@@ -1278,31 +1482,45 @@ class MainActivity : AppCompatActivity() {
             )
 
         val linearMatch =
-            linear.matchEntire(expression)
+            linear.matchEntire(
+                expression
+            )
 
-        if (linearMatch != null) {
+        if (
+            linearMatch != null
+        ) {
 
             val aText =
-                linearMatch.groupValues[1]
+                linearMatch
+                    .groupValues[1]
 
             val bText =
-                linearMatch.groupValues[2]
+                linearMatch
+                    .groupValues[2]
 
             val a =
                 when (aText) {
-                    "", "+" -> 1.0
+
+                    "",
+                    "+" -> 1.0
+
                     "-" -> -1.0
-                    else -> aText.toDouble()
+
+                    else ->
+                        aText.toDouble()
                 }
 
             val b =
-                if (bText.isBlank()) {
+                if (
+                    bText.isBlank()
+                ) {
                     0.0
                 } else {
                     bText.toDouble()
                 }
 
             return { x ->
+
                 a * x + b
             }
         }
@@ -1311,33 +1529,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     // =========================================================
-    // ТАБЛИЦА
+    // ТАБЛИЦА ОТДЕЛЬНЫМ ЭКРАНОМ
     // =========================================================
 
     private fun openTableScreen(
         prefill: String? = null
     ) {
 
-        val root = createRoot()
+        val root =
+            createRoot()
 
         addBackButton(root)
 
         root.addView(
-            makeTitle("📊 Таблица значений")
+            makeTitle(
+                "📊 Таблица значений"
+            )
         )
 
-        val input = EditText(this)
+        val input =
+            EditText(this)
 
         input.hint =
             "Например: y = x²"
 
-        input.setTextColor(Color.WHITE)
+        input.setTextColor(
+            Color.WHITE
+        )
 
-        input.setHintTextColor(Color.GRAY)
+        input.setHintTextColor(
+            Color.GRAY
+        )
 
-        input.setBackgroundColor(cardColor)
+        input.setBackgroundColor(
+            cardColor
+        )
 
-        if (!prefill.isNullOrBlank()) {
+        input.setPadding(
+            20,
+            20,
+            20,
+            20
+        )
+
+        if (
+            !prefill.isNullOrBlank()
+        ) {
 
             input.setText(prefill)
         }
@@ -1350,13 +1587,19 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val button = Button(this)
+        val button =
+            Button(this)
 
-        button.text = "📊 Создать таблицу"
+        button.text =
+            "📊 Создать таблицу"
 
-        button.setTextColor(Color.WHITE)
+        button.setTextColor(
+            Color.WHITE
+        )
 
-        button.setBackgroundColor(blueColor)
+        button.setBackgroundColor(
+            blueColor
+        )
 
         root.addView(
             button,
@@ -1372,7 +1615,9 @@ class MainActivity : AppCompatActivity() {
         tableContainer.orientation =
             LinearLayout.VERTICAL
 
-        root.addView(tableContainer)
+        root.addView(
+            tableContainer
+        )
 
         button.setOnClickListener {
 
@@ -1394,13 +1639,14 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val table =
+            tableContainer.addView(
                 createFunctionTable(function)
-
-            tableContainer.addView(table)
+            )
         }
 
-        if (!prefill.isNullOrBlank()) {
+        if (
+            !prefill.isNullOrBlank()
+        ) {
 
             val function =
                 parseFunction(prefill)
@@ -1422,12 +1668,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun openPhotoScreen() {
 
-        val root = createRoot()
+        val root =
+            createRoot()
 
         addBackButton(root)
 
         root.addView(
-            makeTitle("📷 Решить по фото")
+            makeTitle(
+                "📷 Решить по фото"
+            )
         )
 
         root.addView(
@@ -1436,13 +1685,19 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val button = Button(this)
+        val button =
+            Button(this)
 
-        button.text = "📷 Выбрать фото"
+        button.text =
+            "📷 Выбрать фото"
 
-        button.setTextColor(Color.WHITE)
+        button.setTextColor(
+            Color.WHITE
+        )
 
-        button.setBackgroundColor(blueColor)
+        button.setBackgroundColor(
+            blueColor
+        )
 
         root.addView(
             button,
@@ -1452,27 +1707,15 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-        val resultText = TextView(this)
-
-        resultText.setTextColor(Color.WHITE)
-
-        resultText.textSize = 18f
-
-        resultText.setPadding(
-            20,
-            30,
-            20,
-            30
-        )
-
-        root.addView(resultText)
-
         button.setOnClickListener {
 
             val intent =
-                Intent(Intent.ACTION_GET_CONTENT)
+                Intent(
+                    Intent.ACTION_GET_CONTENT
+                )
 
-            intent.type = "image/*"
+            intent.type =
+                "image/*"
 
             startActivityForResult(
                 intent,
@@ -1483,6 +1726,7 @@ class MainActivity : AppCompatActivity() {
         setScreen(root)
     }
 
+    @Suppress("DEPRECATION")
     override fun onActivityResult(
         requestCode: Int,
         resultCode: Int,
@@ -1501,13 +1745,16 @@ class MainActivity : AppCompatActivity() {
         ) {
 
             val uri =
-                data?.data ?: return
+                data?.data
+                    ?: return
 
             uploadPhoto(uri)
         }
     }
 
-    private fun uploadPhoto(uri: Uri) {
+    private fun uploadPhoto(
+        uri: Uri
+    ) {
 
         Toast.makeText(
             this,
@@ -1527,9 +1774,8 @@ class MainActivity : AppCompatActivity() {
             inputStream.close()
 
             val requestBody =
-                RequestBody.create(
-                    MediaType.parse("image/*"),
-                    bytes
+                bytes.toRequestBody(
+                    "image/*".toMediaType()
                 )
 
             val multipart =
@@ -1577,10 +1823,12 @@ class MainActivity : AppCompatActivity() {
                     ) {
 
                         val responseText =
-                            response.body()?.string()
+                            response.body?.string()
                                 ?: ""
 
-                        if (!response.isSuccessful) {
+                        if (
+                            !response.isSuccessful
+                        ) {
 
                             runOnUiThread {
 
@@ -1597,7 +1845,9 @@ class MainActivity : AppCompatActivity() {
                         try {
 
                             val json =
-                                JSONObject(responseText)
+                                org.json.JSONObject(
+                                    responseText
+                                )
 
                             val recognized =
                                 json.optString(
@@ -1620,7 +1870,9 @@ class MainActivity : AppCompatActivity() {
                             runOnUiThread {
 
                                 openAIResultScreen(
-                                    if (recognized.isBlank()) {
+                                    if (
+                                        recognized.isBlank()
+                                    ) {
                                         "Задача по фото"
                                     } else {
                                         recognized
@@ -1668,7 +1920,9 @@ class MainActivity : AppCompatActivity() {
             "$task\nОтвет: $answer"
         )
 
-        if (historyList.size > 50) {
+        if (
+            historyList.size > 50
+        ) {
 
             historyList.removeAt(0)
         }
@@ -1708,27 +1962,36 @@ class MainActivity : AppCompatActivity() {
                 ""
             ) ?: ""
 
-        if (history.isNotBlank()) {
+        if (
+            history.isNotBlank()
+        ) {
 
             historyList.clear()
 
             historyList.addAll(
-                history.split("\n---\n")
+                history.split(
+                    "\n---\n"
+                )
             )
         }
     }
 
     private fun openHistoryScreen() {
 
-        val root = createRoot()
+        val root =
+            createRoot()
 
         addBackButton(root)
 
         root.addView(
-            makeTitle("📚 История решений")
+            makeTitle(
+                "📚 История решений"
+            )
         )
 
-        if (historyList.isEmpty()) {
+        if (
+            historyList.isEmpty()
+        ) {
 
             root.addView(
                 makeCardText(
@@ -1742,7 +2005,8 @@ class MainActivity : AppCompatActivity() {
                 .asReversed()
                 .forEach { item ->
 
-                    val card = makeCard()
+                    val card =
+                        makeCard()
 
                     card.addView(
                         makeCardText(item)
@@ -1752,14 +2016,19 @@ class MainActivity : AppCompatActivity() {
                 }
         }
 
-        val clearButton = Button(this)
+        val clearButton =
+            Button(this)
 
         clearButton.text =
             "🗑 Очистить историю"
 
-        clearButton.setTextColor(Color.WHITE)
+        clearButton.setTextColor(
+            Color.WHITE
+        )
 
-        clearButton.setBackgroundColor(blueColor)
+        clearButton.setBackgroundColor(
+            blueColor
+        )
 
         root.addView(
             clearButton,
