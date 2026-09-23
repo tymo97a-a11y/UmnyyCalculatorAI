@@ -140,6 +140,30 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(
+            R.id.menuEquations
+        ).setOnClickListener {
+
+            startActivity(
+                Intent(
+                    this,
+                    EquationActivity::class.java
+                )
+            )
+        }
+
+        findViewById<View>(
+            R.id.menuSystems
+        ).setOnClickListener {
+
+            startActivity(
+                Intent(
+                    this,
+                    SystemActivity::class.java
+                )
+            )
+        }
+
+        findViewById<View>(
             R.id.menuPhoto
         ).setOnClickListener {
 
