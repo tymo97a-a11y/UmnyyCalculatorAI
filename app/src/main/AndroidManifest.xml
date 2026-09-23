@@ -11,6 +11,10 @@
         android:theme="@style/AppTheme">
 
         <activity
+            android:name="com.smartcalculator.ai.EquationActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.smartcalculator.ai.MainActivity"
             android:exported="true">
 
