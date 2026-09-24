@@ -145,6 +145,58 @@
                 android:textSize="32sp" />
         </LinearLayout>
 
+        <!-- СИСТЕМЫ УРАВНЕНИЙ -->
+
+        <LinearLayout
+            android:id="@+id/menuSystems"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/button_number"
+            android:layout_marginTop="14dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:gravity="center"
+                android:text="🧩"
+                android:textSize="30sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Системы уравнений"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Решение без AI"
+                    android:textColor="#91A0B8"
+                    android:textSize="13sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#91A0B8"
+                android:textSize="30sp" />
+        </LinearLayout>
+
         <!-- ДВЕ КАРТОЧКИ -->
 
         <LinearLayout

@@ -15,6 +15,10 @@
             android:exported="false" />
 
         <activity
+            android:name="com.smartcalculator.ai.SystemActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.smartcalculator.ai.MainActivity"
             android:exported="true">
 
