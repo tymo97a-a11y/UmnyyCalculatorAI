@@ -1,5 +1,7 @@
 package com.smartcalculator.ai
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
@@ -644,13 +646,16 @@ class MainActivity : AppCompatActivity() {
         )
 
         val display =
-            TextView(this)
+            EditText(this)
 
-        display.text =
-            "0"
+        display.setText("0")
 
         display.setTextColor(
             Color.WHITE
+        )
+
+        display.setHintTextColor(
+            secondaryColor
         )
 
         display.textSize =
@@ -659,6 +664,14 @@ class MainActivity : AppCompatActivity() {
         display.gravity =
             Gravity.RIGHT or
                     Gravity.CENTER_VERTICAL
+
+        display.setSingleLine(true)
+
+        display.setSelectAllOnFocus(false)
+
+        display.isLongClickable = true
+
+        display.setTextIsSelectable(true)
 
         display.setPadding(
             dp(20),
@@ -678,6 +691,79 @@ class MainActivity : AppCompatActivity() {
                 dp(100)
             )
         )
+
+        val pasteButton =
+            Button(this)
+
+        pasteButton.text =
+            "📋 Вставить из буфера"
+
+        pasteButton.setTextColor(
+            Color.WHITE
+        )
+
+        pasteButton.setBackgroundColor(
+            blueColor
+        )
+
+        pasteButton.textSize =
+            15f
+
+        root.addView(
+            pasteButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(58)
+            ).apply {
+                topMargin = dp(8)
+            }
+        )
+
+        pasteButton.setOnClickListener {
+
+            val clipboard =
+                getSystemService(
+                    Context.CLIPBOARD_SERVICE
+                ) as ClipboardManager
+
+            val clip =
+                clipboard.primaryClip
+
+            if (
+                clip != null &&
+                clip.itemCount > 0
+            ) {
+
+                val pasted =
+                    clip.getItemAt(0)
+                        .coerceToText(this)
+                        .toString()
+
+                if (pasted.isNotBlank()) {
+
+                    display.setText(pasted)
+                    display.setSelection(
+                        display.text.length
+                    )
+
+                } else {
+
+                    Toast.makeText(
+                        this,
+                        "Буфер обмена пуст",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+            } else {
+
+                Toast.makeText(
+                    this,
+                    "Буфер обмена пуст",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
 
         val grid =
             GridLayout(this)
