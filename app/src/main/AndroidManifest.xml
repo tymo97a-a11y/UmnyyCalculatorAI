@@ -17,6 +17,18 @@
             android:exported="false" />
 
         <activity
+            android:name="com.smartcalculator.ai.GeometryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.smartcalculator.ai.FinanceActivity"
+            android:exported="false" />
+
+        <activity
+            android:name="com.smartcalculator.ai.MatrixActivity"
+            android:exported="false" />
+
+        <activity
             android:name="com.smartcalculator.ai.MainActivity"
             android:exported="true">
 
