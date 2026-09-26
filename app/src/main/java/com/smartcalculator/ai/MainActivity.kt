@@ -134,6 +134,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(
+            R.id.menuGeometry
+        ).setOnClickListener {
+            startActivity(Intent(this, GeometryActivity::class.java))
+        }
+
+        findViewById<View>(
+            R.id.menuFinance
+        ).setOnClickListener {
+            startActivity(Intent(this, FinanceActivity::class.java))
+        }
+
+        findViewById<View>(
+            R.id.menuMatrix
+        ).setOnClickListener {
+            startActivity(Intent(this, MatrixActivity::class.java))
+        }
+
+        findViewById<View>(
             R.id.menuHistory
         ).setOnClickListener {
 
