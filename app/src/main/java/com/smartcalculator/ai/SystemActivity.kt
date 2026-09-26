@@ -31,7 +31,7 @@ class SystemActivity : AppCompatActivity() {
         }
         root.addView(back, params(52))
         root.addView(title("🧩 Системы уравнений"))
-        root.addView(label("Решение двух линейных уравнений без AI и API."))
+        root.addView(label("Решение двух линейных уравнений локально."))
         root.addView(label("Первое уравнение"))
         val first = input("Например: 2x + y = 7")
         root.addView(first, params(64))
@@ -39,7 +39,7 @@ class SystemActivity : AppCompatActivity() {
         val second = input("Например: x - y = 1")
         root.addView(second, params(64))
         val solve = Button(this).apply {
-            text = "🧮 Решить без AI"
+            text = "🧮 Решить"
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.rgb(36, 107, 253))
             textSize = 16f

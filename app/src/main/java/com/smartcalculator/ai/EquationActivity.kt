@@ -24,10 +24,10 @@ class EquationActivity : AppCompatActivity() {
         setContentView(scroll)
 
         root.addView(title("🧠 Уравнения и функции", 27f))
-        root.addView(label("Локальный математический модуль — без AI и API."))
+        root.addView(label("Локальный математический модуль — работает без интернета."))
         val equation = input("Например: x² - 5x + 6 = 0")
         root.addView(equation, params(76))
-        val solve = button("🧮 Решить без AI")
+        val solve = button("🧮 Решить")
         root.addView(solve, params(58))
         val answer = output("Введите линейное или квадратное уравнение.")
         root.addView(answer, params())
@@ -55,7 +55,7 @@ class EquationActivity : AppCompatActivity() {
 
             try {
                 graph.setFunction(EquationSolver.compileFunction(expression))
-                answer.text = "График построен локально, без AI."
+                answer.text = "График построен локально."
             } catch (exception: Exception) { answer.text = "Ошибка функции: ${exception.message ?: "не удалось разобрать функцию"}" }
         }
     }

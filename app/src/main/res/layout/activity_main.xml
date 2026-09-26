@@ -25,7 +25,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Умный калькулятор AI"
+            android:text="Умный калькулятор"
             android:textColor="#FFFFFF"
             android:textSize="28sp"
             android:textStyle="bold"
@@ -39,59 +39,6 @@
             android:textSize="15sp"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="24dp" />
-
-        <!-- AI -->
-
-        <LinearLayout
-            android:id="@+id/menuAI"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="18dp"
-            android:background="@drawable/button_operator"
-            android:clickable="true"
-            android:focusable="true">
-
-            <TextView
-                android:layout_width="65dp"
-                android:layout_height="65dp"
-                android:gravity="center"
-                android:text="🤖"
-                android:textSize="36sp" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Рассчитать с AI"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Задачи • объяснения • решения"
-                    android:textColor="#DCE7FF"
-                    android:textSize="13sp"
-                    android:layout_marginTop="4dp" />
-
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#FFFFFF"
-                android:textSize="32sp" />
-
-        </LinearLayout>
 
         <!-- УРАВНЕНИЯ И ФУНКЦИИ -->
 
@@ -131,7 +78,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Решение без AI • графики"
+                    android:text="Локальное решение • графики"
                     android:textColor="#DCE7FF"
                     android:textSize="13sp"
                     android:layout_marginTop="4dp" />
@@ -183,7 +130,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Решение без AI"
+                    android:text="Локальное решение"
                     android:textColor="#91A0B8"
                     android:textSize="13sp"
                     android:layout_marginTop="4dp" />
@@ -286,95 +233,6 @@
 
         </LinearLayout>
 
-        <!-- ЕЩЁ ДВЕ КАРТОЧКИ -->
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="14dp">
-
-            <LinearLayout
-                android:id="@+id/menuPhoto"
-                android:layout_width="0dp"
-                android:layout_height="145dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="12dp"
-                android:background="@drawable/button_number"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📷"
-                    android:textSize="38sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Решить по фото"
-                    android:textColor="#FFFFFF"
-                    android:textSize="17sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    android:layout_marginTop="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Фото задачи"
-                    android:textColor="#91A0B8"
-                    android:textSize="12sp"
-                    android:layout_marginTop="3dp" />
-
-            </LinearLayout>
-
-            <Space
-                android:layout_width="12dp"
-                android:layout_height="1dp" />
-
-            <LinearLayout
-                android:id="@+id/menuTable"
-                android:layout_width="0dp"
-                android:layout_height="145dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="12dp"
-                android:background="@drawable/button_number"
-                android:clickable="true"
-                android:focusable="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📊"
-                    android:textSize="38sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Таблица"
-                    android:textColor="#FFFFFF"
-                    android:textSize="17sp"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Значения функции"
-                    android:textColor="#91A0B8"
-                    android:textSize="12sp"
-                    android:layout_marginTop="3dp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
         <!-- ИСТОРИЯ -->
 
         <LinearLayout
@@ -419,7 +277,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="💡 Математика • AI • графики • фото • пошаговые решения"
+            android:text="💡 Математика • графики • пошаговые решения"
             android:textColor="#61718B"
             android:textSize="12sp"
             android:gravity="center"
