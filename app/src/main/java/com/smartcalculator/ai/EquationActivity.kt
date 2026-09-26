@@ -33,7 +33,7 @@ class EquationActivity : AppCompatActivity() {
         root.addView(answer, params())
 
         root.addView(title("📈 График функции", 22f))
-        root.addView(label("Введите выражение без знака =. Поддерживаются x, +, −, ×, ÷, ^, скобки, sin, cos, tan, sqrt, abs, ln, log, π и e."))
+        root.addView(label("Введите выражение без знака =. Поддерживаются x, +, −, ×, ÷, ^, %, !, скобки, sin, cos, tan, sqrt, abs, ln, log, log2, exp, asin, acos, atan, π и e."))
         val function = input("Например: x^2 - 4 или 2*x + 5")
         root.addView(function, params(76))
         val graphButton = button("📈 Построить график")
