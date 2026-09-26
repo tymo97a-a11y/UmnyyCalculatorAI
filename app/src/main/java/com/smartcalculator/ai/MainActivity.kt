@@ -915,8 +915,9 @@ class MainActivity : AppCompatActivity() {
 
                     "AC" -> {
 
-                        display.text =
+                        display.setText(
                             "0"
+                        )
                     }
 
                     // =========================================
@@ -929,7 +930,7 @@ class MainActivity : AppCompatActivity() {
                             display.text
                                 .toString()
 
-                        display.text =
+                        display.setText(
                             if (
                                 value.length <= 1
                             ) {
@@ -940,6 +941,7 @@ class MainActivity : AppCompatActivity() {
 
                                 value.dropLast(1)
                             }
+                        )
                     }
 
                     // =========================================
@@ -952,10 +954,11 @@ class MainActivity : AppCompatActivity() {
                             display.text
                                 .toString()
 
-                        display.text =
+                        display.setText(
                             calculateExpression(
                                 expression
                             )
+                        )
                     }
 
                     // =========================================
@@ -979,8 +982,9 @@ class MainActivity : AppCompatActivity() {
                                 val value =
                                     if (current == "0") "" else current
 
-                                display.text =
+                                display.setText(
                                     value + text + "("
+                                )
                             }
 
                             "π",
@@ -989,8 +993,9 @@ class MainActivity : AppCompatActivity() {
                                 val value =
                                     if (current == "0") "" else current
 
-                                display.text =
+                                display.setText(
                                     value + text
+                                )
                             }
 
                             "^",
@@ -1003,8 +1008,9 @@ class MainActivity : AppCompatActivity() {
 
                                 if (current == "0") {
 
-                                    display.text =
+                                    display.setText(
                                         text
+                                    )
 
                                 } else {
 
