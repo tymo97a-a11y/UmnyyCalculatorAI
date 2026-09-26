@@ -827,6 +827,30 @@ class MainActivity : AppCompatActivity() {
         setScreen(root)
     }
 
+    private fun calculateExpression(expression: String): String {
+        return try {
+            var clean = expression
+                .trim()
+                .replace(",", ".")
+                .replace("×", "*")
+                .replace("÷", "/")
+                .replace("−", "-")
+                .replace("π", "pi")
+                .replace("√", "sqrt")
+                .replace("²", "^2")
+                .replace(" ", "")
+
+            if (clean.isBlank()) {
+                return "0"
+            }
+
+            val value = EquationSolver.evaluateExpression(clean)
+            formatNumber(value)
+        } catch (exception: Exception) {
+            "Ошибка: ${exception.message ?: "проверьте выражение"}"
+        }
+    }
+
     // =========================================================
     // ГРАФИК
     // =========================================================
