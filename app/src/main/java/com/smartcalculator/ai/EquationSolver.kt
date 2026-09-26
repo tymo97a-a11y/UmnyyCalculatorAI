@@ -19,6 +19,15 @@ object EquationSolver {
         return Parser(expression).parse()
     }
 
+    /** Evaluates a numeric expression locally, without x and without network access. */
+    fun evaluateExpression(source: String): Double {
+        val expression = normalizeFunction(source)
+        if (expression.isBlank()) error("Введите выражение.")
+        val value = Parser(expression).parse()(0.0)
+        if (!value.isFinite()) error("Результат не является конечным числом.")
+        return value
+    }
+
     fun solve(source: String): Solution {
         val parts = source.replace("−", "-").split('=')
         if (parts.size != 2) error("Введите уравнение со знаком =, например x² - 5x + 6 = 0.")
@@ -85,7 +94,7 @@ object EquationSolver {
 
     private fun normalizeFunction(source: String): String = source.trim().lowercase()
         .replace("²", "^2").replace("−", "-").replace("×", "*").replace("÷", "/")
-        .replace("π", "pi").replace(" ", "")
+        .replace("π", "pi").replace("√", "sqrt").replace(" ", "")
         .removePrefix("y=").removePrefix("f(x)=")
 
     private fun near(value: Double) = abs(value) < EPSILON
@@ -115,7 +124,10 @@ object EquationSolver {
             var result = power()
             while (true) result = when {
                 take('*') -> result.combine(power()) { a, b -> a * b }
-                take('/') -> result.combine(power()) { a, b -> a / b }
+                take('/') -> result.combine(power()) { a, b ->
+                    if (abs(b) < EPSILON) error("Деление на ноль.")
+                    a / b
+                }
                 implicitMultiplicationStarts() -> result.combine(power()) { a, b -> a * b }
                 else -> return result
             }
@@ -130,7 +142,45 @@ object EquationSolver {
         private fun unary(): (Double) -> Double = when {
             take('+') -> unary()
             take('-') -> unary().let { value -> { x -> -value(x) } }
-            else -> atom()
+            else -> postfix()
+        }
+
+        private fun postfix(): (Double) -> Double {
+            var result = atom()
+
+            while (true) {
+
+                if (take('%')) {
+
+                    val previous = result
+                    result = { x -> previous(x) / 100.0 }
+
+                } else if (take('!')) {
+
+                    val previous = result
+                    result = { x -> factorial(previous(x)) }
+
+                } else {
+
+                    return result
+                }
+            }
+        }
+
+        private fun factorial(value: Double): Double {
+            if (!value.isFinite()) error("Нельзя вычислить факториал.")
+            val rounded = kotlin.math.round(value)
+            if (abs(value - rounded) > EPSILON || rounded < 0.0 || rounded > 170.0) {
+                error("Факториал доступен для целых чисел от 0 до 170.")
+            }
+
+            var result = 1.0
+            var i = 2L
+            while (i <= rounded.toLong()) {
+                result *= i.toDouble()
+                i++
+            }
+            return result
         }
 
         private fun atom(): (Double) -> Double {
