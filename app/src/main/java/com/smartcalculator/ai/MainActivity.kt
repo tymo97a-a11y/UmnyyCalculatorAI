@@ -633,313 +633,198 @@ class MainActivity : AppCompatActivity() {
     // =========================================================
 
     private fun openCalculatorScreen() {
-
-        val root =
-            createRoot()
-
+        val root = createRoot()
         addBackButton(root)
+        root.addView(makeTitle("🧮 Калькулятор"))
 
-        root.addView(
-            makeTitle(
-                "🧮 Калькулятор"
-            )
-        )
-
-        val display =
-            EditText(this)
-
+        val display = EditText(this)
         display.setText("0")
-
-        display.setTextColor(
-            Color.WHITE
-        )
-
-        display.setHintTextColor(
-            secondaryColor
-        )
-
-        display.textSize =
-            32f
-
-        display.gravity =
-            Gravity.RIGHT or
-                    Gravity.CENTER_VERTICAL
-
+        display.setTextColor(Color.WHITE)
+        display.setHintTextColor(secondaryColor)
+        display.textSize = 32f
+        display.gravity = Gravity.RIGHT or Gravity.CENTER_VERTICAL
         display.setSingleLine(true)
-
         display.setSelectAllOnFocus(false)
-
         display.isLongClickable = true
-
         display.setTextIsSelectable(true)
+        display.setPadding(dp(20), dp(20), dp(20), dp(20))
+        display.setBackgroundColor(cardColor)
 
-        display.setPadding(
-            dp(20),
-            dp(20),
-            dp(20),
-            dp(20)
-        )
+        root.addView(display, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(100)
+        ))
 
-        display.setBackgroundColor(
-            cardColor
-        )
+        val pasteButton = Button(this)
+        pasteButton.text = "📋 Вставить из буфера"
+        pasteButton.setTextColor(Color.WHITE)
+        pasteButton.setBackgroundColor(blueColor)
+        pasteButton.textSize = 15f
 
-        root.addView(
-            display,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(100)
-            )
-        )
-
-        val pasteButton =
-            Button(this)
-
-        pasteButton.text =
-            "📋 Вставить из буфера"
-
-        pasteButton.setTextColor(
-            Color.WHITE
-        )
-
-        pasteButton.setBackgroundColor(
-            blueColor
-        )
-
-        pasteButton.textSize =
-            15f
-
-        root.addView(
-            pasteButton,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(58)
-            ).apply {
-                topMargin = dp(8)
-            }
-        )
+        root.addView(pasteButton, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(58)
+        ).apply { topMargin = dp(8) })
 
         pasteButton.setOnClickListener {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = clipboard.primaryClip
 
-            val clipboard =
-                getSystemService(
-                    Context.CLIPBOARD_SERVICE
-                ) as ClipboardManager
-
-            val clip =
-                clipboard.primaryClip
-
-            if (
-                clip != null &&
-                clip.itemCount > 0
-            ) {
-
-                val pasted =
-                    clip.getItemAt(0)
-                        .coerceToText(this)
-                        .toString()
-
+            if (clip != null && clip.itemCount > 0) {
+                val pasted = clip.getItemAt(0).coerceToText(this).toString()
                 if (pasted.isNotBlank()) {
-
-                    display.setText(pasted)
-                    display.setSelection(
-                        display.text.length
-                    )
-
+                    display.setText(pasted.trim())
+                    display.setSelection(display.text.length)
                 } else {
-
-                    Toast.makeText(
-                        this,
-                        "Буфер обмена пуст",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "Буфер обмена пуст", Toast.LENGTH_SHORT).show()
                 }
-
             } else {
-
-                Toast.makeText(
-                    this,
-                    "Буфер обмена пуст",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "Буфер обмена пуст", Toast.LENGTH_SHORT).show()
             }
         }
 
-        val gridContainer =
-            LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(0, dp(5), 0, dp(5))
-            }
+        // Фиксированная сетка: 4 колонки × 8 строк.
+        // Каждая кнопка получает точную строку и колонку.
+        val grid = GridLayout(this).apply {
+            columnCount = 4
+            rowCount = 8
+            useDefaultMargins = false
+        }
 
-        fun addCalculatorButton(row: LinearLayout, text: String, weight: Float = 1f) {
+        fun addCalcButton(text: String, row: Int, column: Int, span: Int = 1) {
             val button = Button(this)
+
             button.text = text
             button.setTextColor(Color.WHITE)
             button.textSize = 20f
             button.minHeight = 0
+            button.minimumHeight = 0
             button.setPadding(dp(2), dp(2), dp(2), dp(2))
 
-            if (text in setOf("+", "−", "×", "÷", "=", "%", "AC", "sin", "cos", "tan", "sqrt", "ln", "log", "^", "!", "π", "e")) {
-                button.setBackgroundResource(R.drawable.button_operator)
-            } else {
-                button.setBackgroundResource(R.drawable.button_number)
-            }
+            val operator = text in setOf(
+                "+", "−", "×", "÷", "=", "%", "AC",
+                "sin", "cos", "tan", "sqrt", "ln", "log",
+                "^", "!", "π", "e"
+            )
 
-            row.addView(button, LinearLayout.LayoutParams(0, dp(85), weight).apply {
-                setMargins(dp(4), dp(4), dp(4), dp(4))
-            })
+            button.setBackgroundResource(
+                if (operator) R.drawable.button_operator
+                else R.drawable.button_number
+            )
+
+            val params = GridLayout.LayoutParams(
+                GridLayout.spec(row, 1),
+                GridLayout.spec(column, span, 1f)
+            )
+
+            params.width = 0
+            params.height = dp(78)
+            params.setMargins(dp(5), dp(5), dp(5), dp(5))
+
+            grid.addView(button, params)
 
             button.setOnClickListener {
                 when (text) {
-                    "AC" -> {
-                        display.setText("0")
-                        display.setSelection(display.text.length)
-                    }
+                    "AC" -> display.setText("0")
+
                     "⌫" -> {
                         val value = display.text.toString()
                         display.setText(if (value.length <= 1) "0" else value.dropLast(1))
                         display.setSelection(display.text.length)
                     }
+
                     "=" -> {
                         val expression = display.text.toString()
                         val result = calculateExpression(expression)
                         display.setText(result)
                         display.setSelection(display.text.length)
-                        if (!result.startsWith("Ошибка")) addHistory(expression, result)
+
+                        if (!result.startsWith("Ошибка:")) {
+                            addHistory(expression, result)
+                        }
                     }
+
                     "sin", "cos", "tan", "sqrt", "ln", "log" -> {
                         val current = display.text.toString()
-                        val value = if (current == "0") "" else current
+                        val value = if (current == "0" || current.startsWith("Ошибка:")) "" else current
                         display.setText(value + text + "(")
                         display.setSelection(display.text.length)
                     }
+
                     "π", "e" -> {
                         val current = display.text.toString()
-                        val value = if (current == "0") "" else current
+                        val value = if (current == "0" || current.startsWith("Ошибка:")) "" else current
                         display.setText(value + text)
                         display.setSelection(display.text.length)
                     }
-                    "^", "!" -> display.append(text)
+
+                    "^", "!" -> {
+                        if (display.text.toString().startsWith("Ошибка:")) {
+                            display.setText("0")
+                        }
+                        display.append(text)
+                    }
+
                     else -> {
                         val current = display.text.toString()
-                        if (current == "0") display.setText(text) else display.append(text)
+                        if (current.startsWith("Ошибка:")) {
+                            display.setText(text)
+                        } else if (current == "0") {
+                            display.setText(text)
+                        } else {
+                            display.append(text)
+                        }
                         display.setSelection(display.text.length)
                     }
                 }
             }
         }
 
-        fun addCalculatorRow(vararg items: Pair<String, Float>) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER
-            }
-            items.forEach { (text, weight) -> addCalculatorButton(row, text, weight) }
-            gridContainer.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(93)))
-        }
+        // Научные функции
+        addCalcButton("sin", 0, 0)
+        addCalcButton("cos", 0, 1)
+        addCalcButton("tan", 0, 2)
+        addCalcButton("sqrt", 0, 3)
 
-        addCalculatorRow("AC" to 1f, "⌫" to 1f, "%" to 1f, "÷" to 1f)
-        addCalculatorRow("sin" to 1f, "cos" to 1f, "tan" to 1f, "sqrt" to 1f)
-        addCalculatorRow("ln" to 1f, "log" to 1f, "^" to 1f, "!" to 1f)
-        addCalculatorRow("(" to 1f, ")" to 1f, "π" to 1f, "e" to 1f)
-        addCalculatorRow("×" to 1f, "−" to 1f, "7" to 1f, "8" to 1f)
-        addCalculatorRow("9" to 1f, "+" to 1f, "4" to 1f, "5" to 1f)
-        addCalculatorRow("6" to 1f, "=" to 1f, "1" to 1f, "2" to 1f)
-        addCalculatorRow("3" to 1f, "." to 1f, "0" to 2f)
+        addCalcButton("ln", 1, 0)
+        addCalcButton("log", 1, 1)
+        addCalcButton("^", 1, 2)
+        addCalcButton("!", 1, 3)
 
-        root.addView(gridContainer, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        // =====================================================
-        // СБРОС К ГЛАВНОМУ МЕНЮ
-        // =====================================================
+        addCalcButton("(", 2, 0)
+        addCalcButton(")", 2, 1)
+        addCalcButton("π", 2, 2)
+        addCalcButton("e", 2, 3)
 
-        val resetButton =
-            Button(this)
+        // Основная клавиатура
+        addCalcButton("AC", 3, 0)
+        addCalcButton("⌫", 3, 1)
+        addCalcButton("%", 3, 2)
+        addCalcButton("÷", 3, 3)
 
-        resetButton.text =
-            "🗑 Сбросить калькулятор"
+        addCalcButton("7", 4, 0)
+        addCalcButton("8", 4, 1)
+        addCalcButton("9", 4, 2)
+        addCalcButton("×", 4, 3)
 
-        resetButton.setTextColor(
-            Color.WHITE
-        )
+        addCalcButton("4", 5, 0)
+        addCalcButton("5", 5, 1)
+        addCalcButton("6", 5, 2)
+        addCalcButton("−", 5, 3)
 
-        resetButton.setBackgroundColor(
-            Color.rgb(
-                170,
-                45,
-                55
-            )
-        )
+        addCalcButton("1", 6, 0)
+        addCalcButton("2", 6, 1)
+        addCalcButton("3", 6, 2)
+        addCalcButton("+", 6, 3)
 
-        resetButton.textSize =
-            16f
+        addCalcButton("0", 7, 0, 2)
+        addCalcButton(".", 7, 2)
+        addCalcButton("=", 7, 3)
 
-        val resetParams =
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(70)
-            )
-
-        resetParams.setMargins(
-            0,
-            dp(15),
-            0,
-            dp(10)
-        )
-
-        root.addView(
-            resetButton,
-            resetParams
-        )
-
-        resetButton.setOnClickListener {
-
-            showMainMenu()
-        }
+        root.addView(grid, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ))
 
         setScreen(root)
-    }
-
-    // =========================================================
-    // ВЫЧИСЛЕНИЕ
-    // =========================================================
-
-    private fun calculateExpression(
-        expression: String
-    ): String {
-
-        return try {
-
-            var clean =
-                expression
-                    .replace("×", "*")
-                    .replace("÷", "/")
-                    .replace(":", "/")
-                    .replace("−", "-")
-                    .replace(",", ".")
-                    .replace("π", "pi")
-                    .replace("√", "sqrt")
-
-            if (clean.isBlank()) {
-                return "0"
-            }
-
-            clean =
-                clean.replace(
-                    Regex("""(\d+(?:\.\d+)?)%"""),
-                    "($1/100)"
-                )
-
-            val value =
-                EquationSolver.evaluateExpression(
-                    clean
-                )
-
-            formatNumber(value)
-
-        } catch (exception: Exception) {
-
-            "Ошибка расчёта: " + (exception.message?.takeIf { it.isNotBlank() } ?: "проверь выражение")
-        }
     }
 
     // =========================================================
