@@ -196,7 +196,9 @@ object EquationSolver {
                 "x" -> { x -> x }
                 "pi" -> { _: Double -> PI }
                 "e" -> { _: Double -> kotlin.math.E }
-                "sin", "cos", "tan", "sqrt", "abs", "ln", "log" -> {
+                "sin", "cos", "tan", "sqrt", "abs", "ln", "log", "log2",
+                "exp", "asin", "acos", "atan", "sinh", "cosh", "tanh",
+                "floor", "ceil", "round" -> {
                     expect('(')
                     val argument = expression()
                     expect(')')
@@ -207,7 +209,18 @@ object EquationSolver {
                         "sqrt" -> { x -> sqrt(argument(x)) }
                         "abs" -> { x -> abs(argument(x)) }
                         "ln" -> { x -> ln(argument(x)) }
-                        else -> { x -> kotlin.math.log10(argument(x)) }
+                        "log" -> { x -> kotlin.math.log10(argument(x)) }
+                        "log2" -> { x -> kotlin.math.log2(argument(x)) }
+                        "exp" -> { x -> kotlin.math.exp(argument(x)) }
+                        "asin" -> { x -> kotlin.math.asin(argument(x)) }
+                        "acos" -> { x -> kotlin.math.acos(argument(x)) }
+                        "atan" -> { x -> kotlin.math.atan(argument(x)) }
+                        "sinh" -> { x -> kotlin.math.sinh(argument(x)) }
+                        "cosh" -> { x -> kotlin.math.cosh(argument(x)) }
+                        "tanh" -> { x -> kotlin.math.tanh(argument(x)) }
+                        "floor" -> { x -> kotlin.math.floor(argument(x)) }
+                        "ceil" -> { x -> kotlin.math.ceil(argument(x)) }
+                        else -> { x -> kotlin.math.round(argument(x)) }
                     }
                 }
                 else -> error("Ожидались число, x или функция.")
