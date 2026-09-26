@@ -134,6 +134,24 @@ class MainActivity : AppCompatActivity() {
         }
 
         findViewById<View>(
+            R.id.menuGeometry
+        ).setOnClickListener {
+            startActivity(Intent(this, GeometryActivity::class.java))
+        }
+
+        findViewById<View>(
+            R.id.menuFinance
+        ).setOnClickListener {
+            startActivity(Intent(this, FinanceActivity::class.java))
+        }
+
+        findViewById<View>(
+            R.id.menuMatrix
+        ).setOnClickListener {
+            startActivity(Intent(this, MatrixActivity::class.java))
+        }
+
+        findViewById<View>(
             R.id.menuHistory
         ).setOnClickListener {
 
@@ -673,8 +691,18 @@ class MainActivity : AppCompatActivity() {
                 "⌫",
                 "%",
                 "÷",
+                "sin",
+                "cos",
+                "tan",
+                "sqrt",
+                "ln",
+                "log",
+                "^",
+                "!",
                 "(",
                 ")",
+                "π",
+                "e",
                 "×",
                 "−",
                 "7",
@@ -726,7 +754,17 @@ class MainActivity : AppCompatActivity() {
                 text == "÷" ||
                 text == "=" ||
                 text == "%" ||
-                text == "AC"
+                text == "AC" ||
+                text == "sin" ||
+                text == "cos" ||
+                text == "tan" ||
+                text == "sqrt" ||
+                text == "ln" ||
+                text == "log" ||
+                text == "^" ||
+                text == "!" ||
+                text == "π" ||
+                text == "e"
             ) {
 
                 button.setBackgroundResource(
@@ -840,18 +878,53 @@ class MainActivity : AppCompatActivity() {
 
                     else -> {
 
-                        if (
-                            display.text == "0"
-                        ) {
+                        val current =
+                            display.text.toString()
 
-                            display.text =
-                                text
+                        when (text) {
 
-                        } else {
+                            "sin",
+                            "cos",
+                            "tan",
+                            "sqrt",
+                            "ln",
+                            "log" -> {
 
-                            display.append(
-                                text
-                            )
+                                val value =
+                                    if (current == "0") "" else current
+
+                                display.text =
+                                    value + text + "("
+                            }
+
+                            "π",
+                            "e" -> {
+
+                                val value =
+                                    if (current == "0") "" else current
+
+                                display.text =
+                                    value + text
+                            }
+
+                            "^",
+                            "!" -> {
+
+                                display.append(text)
+                            }
+
+                            else -> {
+
+                                if (current == "0") {
+
+                                    display.text =
+                                        text
+
+                                } else {
+
+                                    display.append(text)
+                                }
+                            }
                         }
                     }
                 }
@@ -923,197 +996,34 @@ class MainActivity : AppCompatActivity() {
 
         return try {
 
-            val clean =
+            var clean =
                 expression
-                    .replace(
-                        "×",
-                        "*"
-                    )
-                    .replace(
-                        "÷",
-                        "/"
-                    )
-                    .replace(
-                        "−",
-                        "-"
-                    )
+                    .replace("×", "*")
+                    .replace("÷", "/")
+                    .replace("−", "-")
+                    .replace("π", "pi")
 
-            evaluateSimpleExpression(
-                clean
-            )
+            if (clean.isBlank()) {
+                return "0"
+            }
 
-        } catch (
-            _: Exception
-        ) {
-
-            "Ошибка"
-        }
-    }
-
-    // =========================================================
-    // ПРОСТОЕ ВЫЧИСЛЕНИЕ
-    // =========================================================
-
-    private fun evaluateSimpleExpression(
-        expression: String
-    ): String {
-
-        val tokens =
-            mutableListOf<String>()
-
-        var current =
-            ""
-
-        for (
-            char in expression
-        ) {
-
-            if (
-                char.isDigit() ||
-                char == '.'
-            ) {
-
-                current += char
-
-            } else {
-
-                if (
-                    current.isNotEmpty()
-                ) {
-
-                    tokens.add(
-                        current
-                    )
-
-                    current =
-                        ""
-                }
-
-                tokens.add(
-                    char.toString()
+            clean =
+                clean.replace(
+                    Regex("""(\d+(?:\.\d+)?)%"""),
+                    "($1/100)"
                 )
-            }
+
+            val value =
+                EquationSolver.evaluateExpression(
+                    clean
+                )
+
+            formatNumber(value)
+
+        } catch (exception: Exception) {
+
+            "Ошибка: " + (exception.message ?: "проверь выражение")
         }
-
-        if (
-            current.isNotEmpty()
-        ) {
-
-            tokens.add(
-                current
-            )
-        }
-
-        if (
-            tokens.isEmpty()
-        ) {
-
-            return "0"
-        }
-
-        // =====================================================
-        // УМНОЖЕНИЕ И ДЕЛЕНИЕ
-        // =====================================================
-
-        var i =
-            1
-
-        while (
-            i < tokens.size - 1
-        ) {
-
-            val op =
-                tokens[i]
-
-            if (
-                op == "*" ||
-                op == "/"
-            ) {
-
-                val left =
-                    tokens[i - 1]
-                        .toDouble()
-
-                val right =
-                    tokens[i + 1]
-                        .toDouble()
-
-                if (
-                    op == "/" &&
-                    right == 0.0
-                ) {
-
-                    return "Ошибка"
-                }
-
-                val value =
-                    if (
-                        op == "*"
-                    ) {
-
-                        left * right
-
-                    } else {
-
-                        left / right
-                    }
-
-                tokens[i - 1] =
-                    value.toString()
-
-                tokens.removeAt(i)
-
-                tokens.removeAt(i)
-
-            } else {
-
-                i += 2
-            }
-        }
-
-        // =====================================================
-        // СЛОЖЕНИЕ И ВЫЧИТАНИЕ
-        // =====================================================
-
-        var result =
-            tokens[0]
-                .toDouble()
-
-        i =
-            1
-
-        while (
-            i < tokens.size - 1
-        ) {
-
-            val op =
-                tokens[i]
-
-            val number =
-                tokens[i + 1]
-                    .toDouble()
-
-            when (op) {
-
-                "+" -> {
-
-                    result +=
-                        number
-                }
-
-                "-" -> {
-
-                    result -=
-                        number
-                }
-            }
-
-            i += 2
-        }
-
-        return formatNumber(
-            result
-        )
     }
 
     // =========================================================

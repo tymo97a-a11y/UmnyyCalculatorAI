@@ -182,7 +182,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Обычные расчёты"
+                    android:text="Обычные и научные расчёты"
                     android:textColor="#91A0B8"
                     android:textSize="12sp"
                     android:layout_marginTop="3dp" />
@@ -267,6 +267,103 @@
                 android:textColor="#91A0B8"
                 android:textSize="12sp"
                 android:layout_marginTop="3dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="14dp">
+
+            <LinearLayout
+                android:id="@+id/menuGeometry"
+                android:layout_width="0dp"
+                android:layout_height="145dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp"
+                android:background="@drawable/button_number"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="📐" android:textSize="38sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Геометрия" android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold" android:layout_marginTop="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Площади • длины" android:textColor="#91A0B8" android:textSize="12sp" android:layout_marginTop="3dp"/>
+
+            </LinearLayout>
+
+            <Space android:layout_width="12dp" android:layout_height="1dp"/>
+
+            <LinearLayout
+                android:id="@+id/menuFinance"
+                android:layout_width="0dp"
+                android:layout_height="145dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="12dp"
+                android:background="@drawable/button_number"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💰" android:textSize="38sp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Финансы" android:textColor="#FFFFFF" android:textSize="17sp" android:textStyle="bold" android:layout_marginTop="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Проценты • скидки" android:textColor="#91A0B8" android:textSize="12sp" android:layout_marginTop="3dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/menuMatrix"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:background="@drawable/button_number"
+            android:layout_marginTop="14dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:gravity="center"
+                android:text="🔢"
+                android:textSize="30sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Матрицы 2×2"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Определитель • обратная матрица"
+                    android:textColor="#91A0B8"
+                    android:textSize="13sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#91A0B8"
+                android:textSize="30sp" />
 
         </LinearLayout>
 
