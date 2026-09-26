@@ -765,268 +765,89 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val grid =
-            GridLayout(this)
-
-        grid.columnCount =
-            4
-
-        val buttons =
-            arrayOf(
-                "AC",
-                "⌫",
-                "%",
-                "÷",
-                "sin",
-                "cos",
-                "tan",
-                "sqrt",
-                "ln",
-                "log",
-                "^",
-                "!",
-                "(",
-                ")",
-                "π",
-                "e",
-                "×",
-                "−",
-                "7",
-                "8",
-                "9",
-                "+",
-                "4",
-                "5",
-                "6",
-                "=",
-                "1",
-                "2",
-                "3",
-                ".",
-                "0"
-            )
-
-        for (
-            text in buttons
-        ) {
-
-            val button =
-                Button(this)
-
-            button.text =
-                text
-
-            button.setTextColor(
-                Color.WHITE
-            )
-
-            button.textSize =
-                20f
-
-            button.minHeight =
-                0
-
-            button.setPadding(
-                dp(2),
-                dp(2),
-                dp(2),
-                dp(2)
-            )
-
-            if (
-                text == "+" ||
-                text == "−" ||
-                text == "×" ||
-                text == "÷" ||
-                text == "=" ||
-                text == "%" ||
-                text == "AC" ||
-                text == "sin" ||
-                text == "cos" ||
-                text == "tan" ||
-                text == "sqrt" ||
-                text == "ln" ||
-                text == "log" ||
-                text == "^" ||
-                text == "!" ||
-                text == "π" ||
-                text == "e"
-            ) {
-
-                button.setBackgroundResource(
-                    R.drawable.button_operator
-                )
-
-            } else {
-
-                button.setBackgroundResource(
-                    R.drawable.button_number
-                )
+        val gridContainer =
+            LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, dp(5), 0, dp(5))
             }
 
-            val params =
-                GridLayout.LayoutParams()
+        fun addCalculatorButton(row: LinearLayout, text: String, weight: Float = 1f) {
+            val button = Button(this)
+            button.text = text
+            button.setTextColor(Color.WHITE)
+            button.textSize = 20f
+            button.minHeight = 0
+            button.setPadding(dp(2), dp(2), dp(2), dp(2))
 
-            params.width =
-                0
+            if (text in setOf("+", "−", "×", "÷", "=", "%", "AC", "sin", "cos", "tan", "sqrt", "ln", "log", "^", "!", "π", "e")) {
+                button.setBackgroundResource(R.drawable.button_operator)
+            } else {
+                button.setBackgroundResource(R.drawable.button_number)
+            }
 
-            params.height =
-                dp(85)
-
-            params.columnSpec =
-                if (
-                    text == "0"
-                ) {
-
-                    GridLayout.spec(
-                        GridLayout.UNDEFINED,
-                        2,
-                        1f
-                    )
-
-                } else {
-
-                    GridLayout.spec(
-                        GridLayout.UNDEFINED,
-                        1,
-                        1f
-                    )
-                }
-
-            params.setMargins(
-                dp(5),
-                dp(5),
-                dp(5),
-                dp(5)
-            )
-
-            grid.addView(
-                button,
-                params
-            )
+            row.addView(button, LinearLayout.LayoutParams(0, dp(85), weight).apply {
+                setMargins(dp(4), dp(4), dp(4), dp(4))
+            })
 
             button.setOnClickListener {
-
                 when (text) {
-
-                    // =========================================
-                    // AC
-                    // =========================================
-
                     "AC" -> {
-
-                        display.setText(
-                            "0"
-                        )
+                        display.setText("0")
+                        display.setSelection(display.text.length)
                     }
-
-                    // =========================================
-                    // BACKSPACE
-                    // =========================================
-
                     "⌫" -> {
-
-                        val value =
-                            display.text
-                                .toString()
-
-                        display.setText(
-                            if (
-                                value.length <= 1
-                            ) {
-
-                                "0"
-
-                            } else {
-
-                                value.dropLast(1)
-                            }
-                        )
+                        val value = display.text.toString()
+                        display.setText(if (value.length <= 1) "0" else value.dropLast(1))
+                        display.setSelection(display.text.length)
                     }
-
-                    // =========================================
-                    // =
-                    // =========================================
-
                     "=" -> {
-
-                        val expression =
-                            display.text
-                                .toString()
-
-                        display.setText(
-                            calculateExpression(
-                                expression
-                            )
-                        )
+                        val expression = display.text.toString()
+                        val result = calculateExpression(expression)
+                        display.setText(result)
+                        display.setSelection(display.text.length)
+                        if (!result.startsWith("Ошибка")) addHistory(expression, result)
                     }
-
-                    // =========================================
-                    // ОСТАЛЬНЫЕ
-                    // =========================================
-
+                    "sin", "cos", "tan", "sqrt", "ln", "log" -> {
+                        val current = display.text.toString()
+                        val value = if (current == "0") "" else current
+                        display.setText(value + text + "(")
+                        display.setSelection(display.text.length)
+                    }
+                    "π", "e" -> {
+                        val current = display.text.toString()
+                        val value = if (current == "0") "" else current
+                        display.setText(value + text)
+                        display.setSelection(display.text.length)
+                    }
+                    "^", "!" -> display.append(text)
                     else -> {
-
-                        val current =
-                            display.text.toString()
-
-                        when (text) {
-
-                            "sin",
-                            "cos",
-                            "tan",
-                            "sqrt",
-                            "ln",
-                            "log" -> {
-
-                                val value =
-                                    if (current == "0") "" else current
-
-                                display.setText(
-                                    value + text + "("
-                                )
-                            }
-
-                            "π",
-                            "e" -> {
-
-                                val value =
-                                    if (current == "0") "" else current
-
-                                display.setText(
-                                    value + text
-                                )
-                            }
-
-                            "^",
-                            "!" -> {
-
-                                display.append(text)
-                            }
-
-                            else -> {
-
-                                if (current == "0") {
-
-                                    display.setText(
-                                        text
-                                    )
-
-                                } else {
-
-                                    display.append(text)
-                                }
-                            }
-                        }
+                        val current = display.text.toString()
+                        if (current == "0") display.setText(text) else display.append(text)
+                        display.setSelection(display.text.length)
                     }
                 }
             }
         }
 
-        root.addView(
-            grid
-        )
+        fun addCalculatorRow(vararg items: Pair<String, Float>) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+            }
+            items.forEach { (text, weight) -> addCalculatorButton(row, text, weight) }
+            gridContainer.addView(row, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(93)))
+        }
 
+        addCalculatorRow("AC" to 1f, "⌫" to 1f, "%" to 1f, "÷" to 1f)
+        addCalculatorRow("sin" to 1f, "cos" to 1f, "tan" to 1f, "sqrt" to 1f)
+        addCalculatorRow("ln" to 1f, "log" to 1f, "^" to 1f, "!" to 1f)
+        addCalculatorRow("(" to 1f, ")" to 1f, "π" to 1f, "e" to 1f)
+        addCalculatorRow("×" to 1f, "−" to 1f, "7" to 1f, "8" to 1f)
+        addCalculatorRow("9" to 1f, "+" to 1f, "4" to 1f, "5" to 1f)
+        addCalculatorRow("6" to 1f, "=" to 1f, "1" to 1f, "2" to 1f)
+        addCalculatorRow("3" to 1f, "." to 1f, "0" to 2f)
+
+        root.addView(gridContainer, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         // =====================================================
         // СБРОС К ГЛАВНОМУ МЕНЮ
         // =====================================================
@@ -1092,8 +913,11 @@ class MainActivity : AppCompatActivity() {
                 expression
                     .replace("×", "*")
                     .replace("÷", "/")
+                    .replace(":", "/")
                     .replace("−", "-")
+                    .replace(",", ".")
                     .replace("π", "pi")
+                    .replace("√", "sqrt")
 
             if (clean.isBlank()) {
                 return "0"
@@ -1114,7 +938,7 @@ class MainActivity : AppCompatActivity() {
 
         } catch (exception: Exception) {
 
-            "Ошибка: " + (exception.message ?: "проверь выражение")
+            "Ошибка расчёта: " + (exception.message?.takeIf { it.isNotBlank() } ?: "проверь выражение")
         }
     }
 
