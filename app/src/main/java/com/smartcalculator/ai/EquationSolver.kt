@@ -3,7 +3,9 @@ package com.smartcalculator.ai
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
@@ -19,7 +21,6 @@ object EquationSolver {
         return Parser(expression).parse()
     }
 
-    /** Evaluates a numeric expression locally, without x and without network access. */
     fun evaluateExpression(source: String): Double {
         val expression = normalizeFunction(source)
         if (expression.isBlank()) error("Введите выражение.")
@@ -92,14 +93,39 @@ object EquationSolver {
         }
     }
 
-    private fun normalizeFunction(source: String): String = source.trim().lowercase()
-        .replace("²", "^2").replace("−", "-").replace("×", "*").replace("÷", "/")
-        .replace("π", "pi").replace("√", "sqrt").replace(" ", "")
-        .removePrefix("y=").removePrefix("f(x)=")
+    private fun normalizeFunction(source: String): String {
+        var value = source.trim().lowercase()
+            .replace("²", "^2")
+            .replace("³", "^3")
+            .replace("−", "-")
+            .replace("×", "*")
+            .replace("÷", "/")
+            .replace("π", "pi")
+            .replace("τ", "tau")
+            .replace("√", "sqrt")
+            .replace(",", ".")
+            .replace(" ", "")
+
+        value = value.replace(Regex("(\\d+(?:\\.\\d+)?)%of"), "$1%*")
+        value = value.replace(Regex("(\\d+(?:\\.\\d+)?)%on"), "(1+$1/100)*")
+        value = value.replace(Regex("(\\d+(?:\\.\\d+)?)%off"), "(1-$1/100)*")
+
+        return value.removePrefix("y=").removePrefix("f(x)=")
+    }
 
     private fun near(value: Double) = abs(value) < EPSILON
-    private fun close(first: Double, second: Double) = abs(first - second) < EPSILON * maxOf(1.0, abs(first))
-    private fun number(value: Double): String = if (near(value - value.toLong())) value.toLong().toString() else "%.6f".format(java.util.Locale.US, value).trimEnd('0').trimEnd('.')
+    private fun close(first: Double, second: Double) =
+        abs(first - second) < EPSILON * maxOf(1.0, abs(first))
+
+    private fun number(value: Double): String {
+        if (!value.isFinite()) return "—"
+        if (abs(value) >= 1e12 || (abs(value) > 0.0 && abs(value) < 1e-9)) {
+            return "%.6e".format(java.util.Locale.US, value)
+        }
+        return if (near(value - value.toLong())) value.toLong().toString()
+        else "%.6f".format(java.util.Locale.US, value).trimEnd('0').trimEnd('.')
+    }
+
     private const val EPSILON = 1e-8
 
     private class Parser(private val input: String) {
@@ -135,7 +161,7 @@ object EquationSolver {
 
         private fun power(): (Double) -> Double {
             var result = unary()
-            if (take('^')) result = result.combine(power()) { a, b -> Math.pow(a, b) }
+            if (take('^')) result = result.combine(power()) { a, b -> a.powSafe(b) }
             return result
         }
 
@@ -147,23 +173,14 @@ object EquationSolver {
 
         private fun postfix(): (Double) -> Double {
             var result = atom()
-
             while (true) {
-
                 if (take('%')) {
-
                     val previous = result
                     result = { x -> previous(x) / 100.0 }
-
                 } else if (take('!')) {
-
                     val previous = result
                     result = { x -> factorial(previous(x)) }
-
-                } else {
-
-                    return result
-                }
+                } else return result
             }
         }
 
@@ -173,7 +190,6 @@ object EquationSolver {
             if (abs(value - rounded) > EPSILON || rounded < 0.0 || rounded > 170.0) {
                 error("Факториал доступен для целых чисел от 0 до 170.")
             }
-
             var result = 1.0
             var i = 2L
             while (i <= rounded.toLong()) {
@@ -185,23 +201,38 @@ object EquationSolver {
 
         private fun atom(): (Double) -> Double {
             if (take('(')) return expression().also { expect(')') }
+
             if (position < input.length && (input[position].isDigit() || input[position] == '.')) {
                 val start = position
                 while (position < input.length && (input[position].isDigit() || input[position] == '.')) position++
-                val number = input.substring(start, position).toDoubleOrNull() ?: error("Некорректное число.")
+
+                if (position < input.length && input[position] == 'e') {
+                    val exponentStart = position
+                    position++
+                    if (position < input.length && (input[position] == '+' || input[position] == '-')) position++
+                    val digitStart = position
+                    while (position < input.length && input[position].isDigit()) position++
+                    if (digitStart == position) position = exponentStart
+                }
+
+                val number = input.substring(start, position).toDoubleOrNull()
+                    ?: error("Некорректное число.")
                 return { _: Double -> number }
             }
+
             val name = readName()
             return when (name) {
                 "x" -> { x -> x }
                 "pi" -> { _: Double -> PI }
+                "tau" -> { _: Double -> 2.0 * PI }
                 "e" -> { _: Double -> kotlin.math.E }
-                "sin", "cos", "tan", "sqrt", "abs", "ln", "log", "log2",
+                "sin", "cos", "tan", "sqrt", "abs", "ln", "log", "log10", "log2",
                 "exp", "asin", "acos", "atan", "sinh", "cosh", "tanh",
-                "floor", "ceil", "round" -> {
+                "floor", "ceil", "round", "cbrt", "sec", "csc", "cot", "sign" -> {
                     expect('(')
                     val argument = expression()
                     expect(')')
+
                     when (name) {
                         "sin" -> { x -> sin(argument(x)) }
                         "cos" -> { x -> cos(argument(x)) }
@@ -209,9 +240,9 @@ object EquationSolver {
                         "sqrt" -> { x -> sqrt(argument(x)) }
                         "abs" -> { x -> abs(argument(x)) }
                         "ln" -> { x -> ln(argument(x)) }
-                        "log" -> { x -> kotlin.math.log10(argument(x)) }
+                        "log", "log10" -> { x -> kotlin.math.log10(argument(x)) }
                         "log2" -> { x -> kotlin.math.log2(argument(x)) }
-                        "exp" -> { x -> kotlin.math.exp(argument(x)) }
+                        "exp" -> { x -> exp(argument(x)) }
                         "asin" -> { x -> kotlin.math.asin(argument(x)) }
                         "acos" -> { x -> kotlin.math.acos(argument(x)) }
                         "atan" -> { x -> kotlin.math.atan(argument(x)) }
@@ -220,7 +251,12 @@ object EquationSolver {
                         "tanh" -> { x -> kotlin.math.tanh(argument(x)) }
                         "floor" -> { x -> kotlin.math.floor(argument(x)) }
                         "ceil" -> { x -> kotlin.math.ceil(argument(x)) }
-                        else -> { x -> kotlin.math.round(argument(x)) }
+                        "round" -> { x -> kotlin.math.round(argument(x)) }
+                        "cbrt" -> { x -> kotlin.math.cbrt(argument(x)) }
+                        "sec" -> { x -> 1.0 / cos(argument(x)) }
+                        "csc" -> { x -> 1.0 / sin(argument(x)) }
+                        "cot" -> { x -> 1.0 / tan(argument(x)) }
+                        else -> { x -> kotlin.math.sign(argument(x)) }
                     }
                 }
                 else -> error("Ожидались число, x или функция.")
@@ -230,15 +266,32 @@ object EquationSolver {
         private fun readName(): String {
             val start = position
             while (position < input.length && input[position].isLetter()) position++
+            if (start == position) error("Ожидалось число, x или функция.")
             return input.substring(start, position)
         }
+
         private fun implicitMultiplicationStarts(): Boolean {
             if (position >= input.length) return false
             val next = input[position]
             return next == '(' || next == '.' || next.isDigit() || next.isLetter()
         }
-        private fun take(char: Char): Boolean = (position < input.length && input[position] == char).also { if (it) position++ }
-        private fun expect(char: Char) { if (!take(char)) error("Ожидался символ '$char'.") }
-        private fun ((Double) -> Double).combine(other: (Double) -> Double, operation: (Double, Double) -> Double): (Double) -> Double = { x -> operation(this(x), other(x)) }
+
+        private fun take(char: Char): Boolean =
+            (position < input.length && input[position] == char).also { if (it) position++ }
+
+        private fun expect(char: Char) {
+            if (!take(char)) error("Ожидался символ '$char'.")
+        }
+
+        private fun ((Double) -> Double).combine(
+            other: (Double) -> Double,
+            operation: (Double, Double) -> Double
+        ): (Double) -> Double = { x -> operation(this(x), other(x)) }
+
+        private fun Double.powSafe(exponent: Double): Double {
+            val result = this.pow(exponent)
+            if (!result.isFinite()) error("Результат слишком большой или не является числом.")
+            return result
+        }
     }
 }
