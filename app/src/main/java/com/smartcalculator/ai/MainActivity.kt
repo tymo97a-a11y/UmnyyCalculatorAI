@@ -641,73 +641,113 @@ class MainActivity : AppCompatActivity() {
         display.setText("0")
         display.setTextColor(Color.WHITE)
         display.setHintTextColor(secondaryColor)
-        display.textSize = 32f
+        display.textSize = 30f
         display.gravity = Gravity.RIGHT or Gravity.CENTER_VERTICAL
         display.setSingleLine(true)
         display.setSelectAllOnFocus(false)
         display.isLongClickable = true
         display.setTextIsSelectable(true)
-        display.setPadding(dp(20), dp(20), dp(20), dp(20))
+        display.setPadding(dp(16), dp(12), dp(16), dp(12))
         display.setBackgroundColor(cardColor)
 
-        root.addView(display, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(100)
-        ))
+        root.addView(
+            display,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(82)
+            )
+        )
 
         val pasteButton = Button(this)
         pasteButton.text = "📋 Вставить из буфера"
         pasteButton.setTextColor(Color.WHITE)
         pasteButton.setBackgroundColor(blueColor)
-        pasteButton.textSize = 15f
+        pasteButton.textSize = 14f
 
-        root.addView(pasteButton, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(58)
-        ).apply { topMargin = dp(8) })
+        root.addView(
+            pasteButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(50)
+            ).apply {
+                topMargin = dp(6)
+            }
+        )
 
         pasteButton.setOnClickListener {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clipboard =
+                getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
             val clip = clipboard.primaryClip
 
             if (clip != null && clip.itemCount > 0) {
-                val pasted = clip.getItemAt(0).coerceToText(this).toString()
+                val pasted =
+                    clip.getItemAt(0)
+                        .coerceToText(this)
+                        .toString()
+
                 if (pasted.isNotBlank()) {
                     display.setText(pasted.trim())
                     display.setSelection(display.text.length)
                 } else {
-                    Toast.makeText(this, "Буфер обмена пуст", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Буфер обмена пуст",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             } else {
-                Toast.makeText(this, "Буфер обмена пуст", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Буфер обмена пуст",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
-        // Фиксированная сетка: 4 колонки × 8 строк.
-        // Каждая кнопка получает точную строку и колонку.
-        val grid = GridLayout(this).apply {
-            columnCount = 4
-            rowCount = 8
-            useDefaultMargins = false
+        fun appendValue(value: String) {
+            val current = display.text.toString()
+
+            if (current.startsWith("Ошибка:")) {
+                display.setText(value)
+            } else if (current == "0") {
+                display.setText(value)
+            } else {
+                display.append(value)
+            }
+
+            display.setSelection(display.text.length)
         }
 
-        fun addCalcButton(text: String, row: Int, column: Int, span: Int = 1) {
+        fun addCalcButton(
+            container: GridLayout,
+            text: String,
+            row: Int,
+            column: Int,
+            span: Int = 1,
+            heightDp: Int = 62
+        ) {
             val button = Button(this)
 
             button.text = text
             button.setTextColor(Color.WHITE)
-            button.textSize = 20f
+            button.textSize = if (text.length >= 4) 16f else 20f
             button.minHeight = 0
             button.minimumHeight = 0
-            button.setPadding(dp(2), dp(2), dp(2), dp(2))
+            button.setPadding(dp(1), dp(1), dp(1), dp(1))
 
             val operator = text in setOf(
                 "+", "−", "×", "÷", "=", "%", "AC",
                 "sin", "cos", "tan", "sqrt", "ln", "log",
-                "^", "!", "π", "e"
+                "^", "!", "π", "e", "(", ")"
             )
 
             button.setBackgroundResource(
-                if (operator) R.drawable.button_operator
-                else R.drawable.button_number
+                if (operator) {
+                    R.drawable.button_operator
+                } else {
+                    R.drawable.button_number
+                }
             )
 
             val params = GridLayout.LayoutParams(
@@ -716,10 +756,15 @@ class MainActivity : AppCompatActivity() {
             )
 
             params.width = 0
-            params.height = dp(78)
-            params.setMargins(dp(5), dp(5), dp(5), dp(5))
+            params.height = dp(heightDp)
+            params.setMargins(
+                dp(3),
+                dp(3),
+                dp(3),
+                dp(3)
+            )
 
-            grid.addView(button, params)
+            container.addView(button, params)
 
             button.setOnClickListener {
                 when (text) {
@@ -727,13 +772,22 @@ class MainActivity : AppCompatActivity() {
 
                     "⌫" -> {
                         val value = display.text.toString()
-                        display.setText(if (value.length <= 1) "0" else value.dropLast(1))
+
+                        display.setText(
+                            if (value.length <= 1) {
+                                "0"
+                            } else {
+                                value.dropLast(1)
+                            }
+                        )
+
                         display.setSelection(display.text.length)
                     }
 
                     "=" -> {
                         val expression = display.text.toString()
                         val result = calculateExpression(expression)
+
                         display.setText(result)
                         display.setSelection(display.text.length)
 
@@ -744,14 +798,34 @@ class MainActivity : AppCompatActivity() {
 
                     "sin", "cos", "tan", "sqrt", "ln", "log" -> {
                         val current = display.text.toString()
-                        val value = if (current == "0" || current.startsWith("Ошибка:")) "" else current
+
+                        val value =
+                            if (
+                                current == "0" ||
+                                current.startsWith("Ошибка:")
+                            ) {
+                                ""
+                            } else {
+                                current
+                            }
+
                         display.setText(value + text + "(")
                         display.setSelection(display.text.length)
                     }
 
                     "π", "e" -> {
                         val current = display.text.toString()
-                        val value = if (current == "0" || current.startsWith("Ошибка:")) "" else current
+
+                        val value =
+                            if (
+                                current == "0" ||
+                                current.startsWith("Ошибка:")
+                            ) {
+                                ""
+                            } else {
+                                current
+                            }
+
                         display.setText(value + text)
                         display.setSelection(display.text.length)
                     }
@@ -760,69 +834,115 @@ class MainActivity : AppCompatActivity() {
                         if (display.text.toString().startsWith("Ошибка:")) {
                             display.setText("0")
                         }
-                        display.append(text)
-                    }
 
-                    else -> {
-                        val current = display.text.toString()
-                        if (current.startsWith("Ошибка:")) {
-                            display.setText(text)
-                        } else if (current == "0") {
-                            display.setText(text)
-                        } else {
-                            display.append(text)
-                        }
+                        display.append(text)
                         display.setSelection(display.text.length)
                     }
+
+                    else -> appendValue(text)
                 }
             }
         }
 
-        // Научные функции
-        addCalcButton("sin", 0, 0)
-        addCalcButton("cos", 0, 1)
-        addCalcButton("tan", 0, 2)
-        addCalcButton("sqrt", 0, 3)
+        // Обычная клавиатура — компактная и всегда видимая.
+        val basicGrid = GridLayout(this).apply {
+            columnCount = 4
+            rowCount = 5
+            useDefaultMargins = false
+        }
 
-        addCalcButton("ln", 1, 0)
-        addCalcButton("log", 1, 1)
-        addCalcButton("^", 1, 2)
-        addCalcButton("!", 1, 3)
+        addCalcButton(basicGrid, "AC", 0, 0)
+        addCalcButton(basicGrid, "⌫", 0, 1)
+        addCalcButton(basicGrid, "%", 0, 2)
+        addCalcButton(basicGrid, "÷", 0, 3)
 
-        addCalcButton("(", 2, 0)
-        addCalcButton(")", 2, 1)
-        addCalcButton("π", 2, 2)
-        addCalcButton("e", 2, 3)
+        addCalcButton(basicGrid, "7", 1, 0)
+        addCalcButton(basicGrid, "8", 1, 1)
+        addCalcButton(basicGrid, "9", 1, 2)
+        addCalcButton(basicGrid, "×", 1, 3)
 
-        // Основная клавиатура
-        addCalcButton("AC", 3, 0)
-        addCalcButton("⌫", 3, 1)
-        addCalcButton("%", 3, 2)
-        addCalcButton("÷", 3, 3)
+        addCalcButton(basicGrid, "4", 2, 0)
+        addCalcButton(basicGrid, "5", 2, 1)
+        addCalcButton(basicGrid, "6", 2, 2)
+        addCalcButton(basicGrid, "−", 2, 3)
 
-        addCalcButton("7", 4, 0)
-        addCalcButton("8", 4, 1)
-        addCalcButton("9", 4, 2)
-        addCalcButton("×", 4, 3)
+        addCalcButton(basicGrid, "1", 3, 0)
+        addCalcButton(basicGrid, "2", 3, 1)
+        addCalcButton(basicGrid, "3", 3, 2)
+        addCalcButton(basicGrid, "+", 3, 3)
 
-        addCalcButton("4", 5, 0)
-        addCalcButton("5", 5, 1)
-        addCalcButton("6", 5, 2)
-        addCalcButton("−", 5, 3)
+        addCalcButton(basicGrid, "0", 4, 0, 2)
+        addCalcButton(basicGrid, ".", 4, 2)
+        addCalcButton(basicGrid, "=", 4, 3)
 
-        addCalcButton("1", 6, 0)
-        addCalcButton("2", 6, 1)
-        addCalcButton("3", 6, 2)
-        addCalcButton("+", 6, 3)
+        root.addView(
+            basicGrid,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
 
-        addCalcButton("0", 7, 0, 2)
-        addCalcButton(".", 7, 2)
-        addCalcButton("=", 7, 3)
+        // Отдельная клавиша как на телефонной клавиатуре.
+        val advancedButton = Button(this)
+        advancedButton.text = "⌨ 123 / Доп."
+        advancedButton.setTextColor(Color.WHITE)
+        advancedButton.setBackgroundColor(cardColor)
+        advancedButton.textSize = 15f
 
-        root.addView(grid, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        ))
+        root.addView(
+            advancedButton,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(48)
+            ).apply {
+                topMargin = dp(5)
+            }
+        )
+
+        val advancedGrid = GridLayout(this).apply {
+            columnCount = 4
+            rowCount = 3
+            useDefaultMargins = false
+            visibility = View.GONE
+        }
+
+        addCalcButton(advancedGrid, "sin", 0, 0, heightDp = 56)
+        addCalcButton(advancedGrid, "cos", 0, 1, heightDp = 56)
+        addCalcButton(advancedGrid, "tan", 0, 2, heightDp = 56)
+        addCalcButton(advancedGrid, "sqrt", 0, 3, heightDp = 56)
+
+        addCalcButton(advancedGrid, "ln", 1, 0, heightDp = 56)
+        addCalcButton(advancedGrid, "log", 1, 1, heightDp = 56)
+        addCalcButton(advancedGrid, "^", 1, 2, heightDp = 56)
+        addCalcButton(advancedGrid, "!", 1, 3, heightDp = 56)
+
+        addCalcButton(advancedGrid, "(", 2, 0, heightDp = 56)
+        addCalcButton(advancedGrid, ")", 2, 1, heightDp = 56)
+        addCalcButton(advancedGrid, "π", 2, 2, heightDp = 56)
+        addCalcButton(advancedGrid, "e", 2, 3, heightDp = 56)
+
+        root.addView(
+            advancedGrid,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
+
+        advancedButton.setOnClickListener {
+            val opened = advancedGrid.visibility != View.VISIBLE
+
+            advancedGrid.visibility =
+                if (opened) View.VISIBLE else View.GONE
+
+            advancedButton.text =
+                if (opened) {
+                    "⌨ Скрыть доп. клавиши"
+                } else {
+                    "⌨ 123 / Доп."
+                }
+        }
 
         setScreen(root)
     }
