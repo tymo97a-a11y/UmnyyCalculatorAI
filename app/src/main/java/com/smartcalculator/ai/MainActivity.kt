@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -77,6 +79,7 @@ class MainActivity : AppCompatActivity() {
 
         loadHistory()
 
+        supportActionBar?.title = "Умный калькулятор"
         showMainMenu()
     }
 
@@ -85,6 +88,8 @@ class MainActivity : AppCompatActivity() {
     // =========================================================
 
     private fun showMainMenu() {
+
+        supportActionBar?.title = "Умный калькулятор"
 
         setContentView(
             R.layout.activity_main
@@ -647,6 +652,38 @@ class MainActivity : AppCompatActivity() {
         display.setSelectAllOnFocus(false)
         display.isLongClickable = true
         display.setTextIsSelectable(true)
+
+        // Показываем текущее выражение прямо в верхней строке приложения.
+        // Так во время ввода вместо "Умный калькулятор" всегда видно, что вводится.
+        supportActionBar?.title = "0"
+
+        display.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) = Unit
+
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int
+                ) {
+                    val value = s?.toString()?.trim().orEmpty()
+
+                    supportActionBar?.title =
+                        if (value.isBlank()) "0" else value
+                }
+
+                override fun afterTextChanged(
+                    s: Editable?
+                ) = Unit
+            }
+        )
+
         display.setPadding(dp(20), dp(20), dp(20), dp(20))
         display.setBackgroundColor(cardColor)
 
